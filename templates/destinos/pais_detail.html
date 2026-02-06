@@ -1,0 +1,67 @@
+{% extends "layout/base.html" %}
+{% load static %}
+
+{% block title %}
+{{ pais.nombre }} | {{ site_name|default:"Turismo" }}
+{% endblock %}
+
+{% block meta_description %}
+Destinos y guías para viajar a {{ pais.nombre }}: qué hacer, itinerarios y consejos.
+{% endblock %}
+
+{% block og_type %}website{% endblock %}
+{% block og_title %}{{ pais.nombre }}{% endblock %}
+
+{% block og_description %}
+Destinos y guías para viajar a {{ pais.nombre }}: qué hacer, itinerarios y consejos.
+{% endblock %}
+
+{% block og_image %}
+{% if page_obj and page_obj.object_list and page_obj.object_list.0.imagen %}
+  {{ request.scheme }}://{{ request.get_host }}{{ page_obj.object_list.0.imagen.url }}
+{% else %}
+  {{ request.scheme }}://{{ request.get_host }}{% static 'img/og-default.jpg' %}
+{% endif %}
+{% endblock %}
+
+{% block twitter_title %}{{ pais.nombre }}{% endblock %}
+{% block twitter_description %}Destinos y guías para viajar a {{ pais.nombre }}.{% endblock %}
+
+{% block twitter_image %}
+{% if page_obj and page_obj.object_list and page_obj.object_list.0.imagen %}
+  {{ request.scheme }}://{{ request.get_host }}{{ page_obj.object_list.0.imagen.url }}
+{% else %}
+  {{ request.scheme }}://{{ request.get_host }}{% static 'img/og-default.jpg' %}
+{% endif %}
+{% endblock %}
+
+{% block content %}
+
+  <nav class="breadcrumb">
+    <a href="/">Inicio</a> ›
+    <a href="/destinos/">Destinos</a> ›
+    {{ pais.nombre }}
+  </nav>
+
+  <div class="section-head">
+    <div>
+      <h1>{{ pais.nombre }}</h1>
+      <p>Elegí un destino para ver sus guías (dónde dormir, qué hacer, itinerarios).</p>
+    </div>
+
+    <span class="pill">
+      {{ paginator.count }} destino{{ paginator.count|pluralize }}
+    </span>
+  </div>
+
+  <div class="grid">
+    {% for destino in page_obj.object_list %}
+      {% include "partials/_destino_card.html" %}
+    {% empty %}
+      <p>No hay destinos publicados todavía.</p>
+    {% endfor %}
+  </div>
+
+  {% include "partials/_pagination.html" with page_obj=page_obj %}
+
+{% endblock %}

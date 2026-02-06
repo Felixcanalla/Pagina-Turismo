@@ -1,0 +1,20 @@
+<div class="card">
+  {% if a.imagen %}
+    <img class="card-img" src="{{ a.imagen.url }}" alt="{{ a.titulo }}">
+  {% endif %}
+
+  <h3 class="card-title">
+    <a href="{% url 'articulo_detail' a.categoria.slug a.slug %}">{{ a.titulo }}</a>
+  </h3>
+
+  <p class="card-meta">
+    {{ a.categoria.nombre }} · {{ a.created_at|date:"M Y" }}
+    {% if a.updated_at %}· Actualizado {{ a.updated_at|date:"M Y" }}{% endif %}
+  </p>
+
+  {% if a.extracto %}
+    <p class="card-desc">{{ a.extracto|truncatechars:160 }}</p>
+  {% else %}
+    <p class="card-desc">Guía práctica en español para planificar mejor tu viaje.</p>
+  {% endif %}
+</div>

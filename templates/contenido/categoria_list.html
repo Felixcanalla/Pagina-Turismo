@@ -1,0 +1,86 @@
+{% extends "layout/base.html" %}
+
+{% block title %}
+{{ categoria.nombre }} | Guías | {{ site_name|default:"Turismo" }}
+{% endblock %}
+
+{% block meta_description %}
+Guías y artículos sobre {{ categoria.nombre }}. Consejos prácticos, rutas, presupuesto y recomendaciones actualizadas.
+{% endblock %}
+
+{% block og_type %}website{% endblock %}
+
+{% block og_title %}
+{{ categoria.nombre }} | Guías
+{% endblock %}
+
+{% block og_description %}
+Guías y artículos sobre {{ categoria.nombre }}. Consejos prácticos, rutas, presupuesto y recomendaciones actualizadas.
+{% endblock %}
+
+{% block og_image %}
+{% if page_obj and page_obj.object_list and page_obj.object_list.0.imagen %}
+{{ request.scheme }}://{{ request.get_host }}{{ page_obj.object_list.0.imagen.url }}
+{% endif %}
+{% endblock %}
+
+{% block twitter_title %}
+{{ categoria.nombre }} | Guías
+{% endblock %}
+
+{% block twitter_description %}
+Guías y artículos sobre {{ categoria.nombre }}. Consejos prácticos, rutas, presupuesto y recomendaciones actualizadas.
+{% endblock %}
+
+{% block twitter_image %}
+{% if page_obj and page_obj.object_list and page_obj.object_list.0.imagen %}
+{{ request.scheme }}://{{ request.get_host }}{{ page_obj.object_list.0.imagen.url }}
+{% endif %}
+{% endblock %}
+
+{% block content %}
+
+  <nav class="breadcrumb">
+    <a href="/">Inicio</a> ›
+    <a href="/guias/">Guías</a> ›
+    {{ categoria.nombre }}
+  </nav>
+
+  <div class="section-head">
+    <div>
+      <h1>{{ categoria.nombre }}</h1>
+      <p>Elegí un artículo para leer la guía completa.</p>
+    </div>
+    <span class="pill">{{ paginator.count }} artículo{{ paginator.count|pluralize }}</span>
+  </div>
+
+  <div class="grid">
+    {% for a in page_obj.object_list %}
+      <div class="card">
+        {% if a.imagen %}
+          <img class="card-img" src="{{ a.imagen.url }}" alt="Guía: {{ a.titulo }}">
+        {% endif %}
+
+        <h3 class="card-title">
+          <a href="{% url 'articulo_detail' categoria.slug a.slug %}">{{ a.titulo }}</a>
+        </h3>
+
+        <p class="card-meta">
+          Publicado {{ a.created_at|date:"M Y" }}
+          {% if a.updated_at %}· Actualizado {{ a.updated_at|date:"M Y" }}{% endif %}
+        </p>
+
+        {% if a.extracto %}
+          <p class="card-desc">{{ a.extracto|truncatechars:160 }}</p>
+        {% else %}
+          <p class="card-desc">Guía práctica en español para planificar mejor tu viaje.</p>
+        {% endif %}
+      </div>
+    {% empty %}
+      <p>No hay artículos publicados en esta categoría.</p>
+    {% endfor %}
+  </div>
+
+  {% include "partials/_pagination.html" with page_obj=page_obj %}
+
+{% endblock %}

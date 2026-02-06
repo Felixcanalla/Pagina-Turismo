@@ -1,0 +1,48 @@
+{% extends "layout/base.html" %}
+{% load wagtailcore_tags wagtailimages_tags %}
+
+{% block content %}
+<section class="section">
+  <h1>{{ page.title }}</h1>
+
+  {# Barra de categorías #}
+  {% if categorias %}
+    <nav class="categories" aria-label="Categorías de guías">
+      <a
+        href="{{ page.url }}"
+        class="categories__item {% if not cat_activa %}is-active{% endif %}"
+        {% if not cat_activa %}aria-current="page"{% endif %}
+      >Todas</a>
+
+      {% for c in categorias %}
+        <a
+          href="{{ page.url }}?cat={{ c.slug }}"
+          class="categories__item {% if cat_activa == c.slug %}is-active{% endif %}"
+          {% if cat_activa == c.slug %}aria-current="page"{% endif %}
+        >{{ c.title }}</a>
+      {% endfor %}
+    </nav>
+  {% endif %}
+
+  <div class="grid-cards">
+    {% for articulo in page_obj %}
+      <article class="card">
+        <a href="{{ articulo.url }}">
+          <h2 class="card-title">{{ articulo.title }}</h2>
+          {% if articulo.hero_image %}
+            {% image articulo.hero_image fill-600x360 as img %}
+            <img src="{{ img.url }}" alt="{{ articulo.title }}" loading="lazy">
+          {% endif %}
+          {% if articulo.resumen %}
+            <div class="card-excerpt">{{ articulo.resumen|richtext }}</div>
+          {% endif %}
+        </a>
+      </article>
+    {% empty %}
+      <p>No hay guías publicadas todavía.</p>
+    {% endfor %}
+  </div>
+
+  {% include "partials/_pagination.html" with page_obj=page_obj %}
+</section>
+{% endblock %}

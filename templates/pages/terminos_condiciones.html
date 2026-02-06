@@ -1,0 +1,20 @@
+{% extends "layout/base.html" %}
+{% load wagtailcore_tags %}
+
+{% block title %}{{ page.title }} | {{ site_name|default:"Guía de Viajes" }}{% endblock %}
+
+{% block content %}
+<section class="section article">
+  <h1>{{ page.title }}</h1>
+
+  <p class="muted">
+    Última actualización: {{ page.last_published_at|date:"d/m/Y" }}
+  </p>
+
+  {% if page.body %}
+    <div class="prose">
+      {% include_block page.body %}
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

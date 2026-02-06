@@ -1,0 +1,48 @@
+{% extends "layout/base.html" %}
+
+{% block content %}
+<section class="container">
+  <header class="post__header">
+    <h1 class="post__title">{{ page.title }}</h1>
+
+    {% if page.descripcion_corta %}
+      <p class="post__excerpt">{{ page.descripcion_corta }}</p>
+    {% endif %}
+  </header>
+
+  {% if page.intro %}
+    <div class="post__content">
+      {{ page.intro|richtext }}
+    </div>
+  {% endif %}
+
+  <div class="post__content">
+    {% for p in articulos %}
+      <article class="post">
+        <header class="post__header">
+          <h2 class="post__title">
+            <a href="{{ p.url }}">{{ p.title }}</a>
+          </h2>
+          {% if p.resumen %}
+            <div class="post__excerpt">{{ p.resumen|richtext }}</div>
+          {% endif %}
+        </header>
+      </article>
+    {% empty %}
+      <p>No hay artículos en esta categoría todavía.</p>
+    {% endfor %}
+  </div>
+
+  {% if articulos.paginator.num_pages > 1 %}
+    <nav class="pagination">
+      {% if articulos.has_previous %}
+        <a href="?page={{ articulos.previous_page_number }}">Anterior</a>
+      {% endif %}
+      <span>Página {{ articulos.number }} de {{ articulos.paginator.num_pages }}</span>
+      {% if articulos.has_next %}
+        <a href="?page={{ articulos.next_page_number }}">Siguiente</a>
+      {% endif %}
+    </nav>
+  {% endif %}
+</section>
+{% endblock %}

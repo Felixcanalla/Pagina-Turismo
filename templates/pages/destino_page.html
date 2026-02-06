@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtailimages_tags %}
+
+{% block content %}
+  <article class="container">
+
+    <header class="hero {% if not page.hero_image %}hero--noimg{% endif %}">
+      {% if page.hero_image %}
+        {% image page.hero_image fill-1600x700 class="hero-img" %}
+      {% endif %}
+
+      <div class="hero-content">
+        <h1>{{ page.title }}</h1>
+        {% if page.intro %}<p>{{ page.intro }}</p>{% endif %}
+      </div>
+    </header>
+
+    <div class="content post-shell">
+      {% if page.body %}
+        {% include_block page.body %}
+      {% endif %}
+    </div>
+
+  </article>
+{% endblock %}

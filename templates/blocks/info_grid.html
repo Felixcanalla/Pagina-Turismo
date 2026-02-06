@@ -1,0 +1,14 @@
+<section class="block block-info-grid">
+  {% if value.title %}
+    <h3 class="info-grid-title">{{ value.title }}</h3>
+  {% endif %}
+
+  <dl class="info-grid">
+    {% for row in value.rows %}
+      <div class="info-row">
+        <dt class="label">{{ row.label }}</dt>
+        <dd class="value">{{ row.value }}</dd>
+      </div>
+    {% endfor %}
+  </dl>
+</section>

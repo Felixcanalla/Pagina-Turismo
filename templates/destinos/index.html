@@ -1,0 +1,68 @@
+{% extends "layout/base.html" %}
+
+{% block title %}
+Destinos | {{ site_name|default:"Turismo" }}
+{% endblock %}
+
+{% block meta_description %}
+Explorá destinos por país y ciudad: qué hacer, cuándo ir, tips, itinerarios y recomendaciones.
+{% endblock %}
+
+{% block og_type %}website{% endblock %}
+
+{% block og_title %}
+Destinos
+{% endblock %}
+
+{% block og_description %}
+Explorá destinos por país y ciudad: qué hacer, cuándo ir, tips, itinerarios y recomendaciones.
+{% endblock %}
+
+{% block og_image %}
+{% if page_obj and page_obj.object_list and page_obj.object_list.0.imagen %}
+{{ request.scheme }}://{{ request.get_host }}{{ page_obj.object_list.0.imagen.url }}
+{% endif %}
+{% endblock %}
+
+{% block twitter_title %}
+Destinos
+{% endblock %}
+
+{% block twitter_description %}
+Explorá destinos por país y ciudad: qué hacer, cuándo ir, tips, itinerarios y recomendaciones.
+{% endblock %}
+
+{% block twitter_image %}
+{% if page_obj and page_obj.object_list and page_obj.object_list.0.imagen %}
+{{ request.scheme }}://{{ request.get_host }}{{ page_obj.object_list.0.imagen.url }}
+{% endif %}
+{% endblock %}
+
+{% block content %}
+
+  <div class="section-head">
+    <div>
+      <h1>Destinos</h1>
+      <p>Elegí un país para ver destinos y guías.</p>
+    </div>
+  </div>
+
+  <div class="grid">
+    {% for p in page_obj.object_list %}
+      <div class="card">
+        <h3 class="card-title">
+          <a href="{% url 'pais_detail' p.slug %}">{{ p.nombre }}</a>
+        </h3>
+        <p class="card-meta">País</p>
+        <p class="card-desc">
+          Guías, ideas y recomendaciones para planificar tu viaje.
+        </p>
+      </div>
+    {% empty %}
+      <p>No hay países cargados todavía.</p>
+    {% endfor %}
+  </div>
+
+  {% include "partials/_pagination.html" with page_obj=page_obj %}
+
+{% endblock %}

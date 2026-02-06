@@ -1,0 +1,45 @@
+{% extends "layout/base.html" %}
+
+{% block title %}
+Guías de viaje | {{ site_name|default:"Turismo" }}
+{% endblock %}
+
+{% block meta_description %}
+Guías prácticas para planificar tu viaje: destinos, rutas, presupuesto, mejores fechas y consejos para ahorrar.
+{% endblock %}
+
+{% block og_type %}website{% endblock %}
+{% block og_title %}Guías de viaje{% endblock %}
+{% block og_description %}
+Guías prácticas para planificar tu viaje: destinos, rutas, presupuesto, mejores fechas y consejos para ahorrar.
+{% endblock %}
+
+{% block twitter_title %}Guías de viaje{% endblock %}
+{% block twitter_description %}
+Guías prácticas para planificar tu viaje: destinos, rutas, presupuesto, mejores fechas y consejos para ahorrar.
+{% endblock %}
+
+{% block content %}
+
+  <div class="section-head">
+    <div>
+      <h1>Guías</h1>
+      <p>Consejos prácticos para viajar mejor: vuelos, alojamiento, transporte y más.</p>
+    </div>
+  </div>
+
+  <div class="grid">
+    {% for c in categorias %}
+      <div class="card">
+        <h3 class="card-title">
+          <a href="{% url 'categoria_list' c.slug %}">{{ c.nombre }}</a>
+        </h3>
+        <p class="card-meta">Categoría</p>
+        <p class="card-desc">Artículos prácticos en español, pensados para viajeros de Argentina y LATAM.</p>
+      </div>
+    {% empty %}
+      <p>No hay categorías todavía.</p>
+    {% endfor %}
+  </div>
+
+{% endblock %}

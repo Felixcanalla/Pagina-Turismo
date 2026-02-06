@@ -1,0 +1,25 @@
+<div class="card">
+  {% if destino.imagen %}
+    <img class="card-img" src="{{ destino.imagen.url }}" alt="{{ destino.nombre }}">
+  {% endif %}
+
+  <h3 class="card-title">
+    <a href="{% url 'destino_detail' destino.pais.slug destino.slug %}">
+      {{ destino.nombre }}
+    </a>
+  </h3>
+
+  <p class="card-meta">
+    Destino · {{ destino.pais.nombre }}
+  </p>
+
+  {% if destino.resumen %}
+    <p class="card-desc">{{ destino.resumen|truncatechars:140 }}</p>
+  {% elif destino.contenido %}
+    <p class="card-desc">{{ destino.contenido|striptags|truncatechars:140 }}</p>
+  {% else %}
+    <p class="card-desc">
+      Guía del destino con recomendaciones y secciones clave para organizar el viaje.
+    </p>
+  {% endif %}
+</div>

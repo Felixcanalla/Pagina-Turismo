@@ -1,0 +1,101 @@
+{% extends "layout/base.html" %}
+{% load static wagtailimages_tags %}
+
+{% block title %}Guías de viaje en español | Guía de Viajes{% endblock %}
+{% block meta_description %}Guías de viaje en español con destinos, itinerarios y consejos prácticos para organizar tu próximo viaje.{% endblock %}
+
+{% block content %}
+
+<div class="hero-wrap">
+  <section class="hero">
+    <img src="{% static 'img/hero-home.jpg' %}" alt="Viajar por Argentina y el mundo">
+    <div class="hero-content">
+      <h1>Guías de viaje en español</h1>
+      <p>Ideas, itinerarios y consejos prácticos para planificar mejor tus viajes desde Argentina y LATAM.</p>
+
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="/destinos/">Explorar destinos</a>
+        <a class="btn btn-secondary" href="/guias/">Leer guías</a>
+      </div>
+    </div>
+  </section>
+</div>
+
+<section>
+  <div class="section-head">
+    <div>
+      <h2>Destinos destacados</h2>
+      <p>Empezá por una guía completa y después profundizá por secciones.</p>
+    </div>
+    <a href="/destinos/">Ver todos →</a>
+  </div>
+
+  <div class="grid">
+    {% for d in destinos %}
+      <div class="card">
+        {% if d.hero_image %}
+          {% image d.hero_image fill-800x500 as img %}
+          <img class="card-img" src="{{ img.url }}" alt="{{ d.title }}" loading="lazy">
+        {% endif %}
+
+        <h3 class="card-title">
+          <a href="{{ d.url }}">{{ d.title }}</a>
+        </h3>
+        <p class="card-meta">Destino · {{ d.get_parent.specific.title }}</p>
+
+        {% if d.descripcion_corta %}
+          <p class="card-desc">{{ d.descripcion_corta|truncatechars:140 }}</p>
+        {% elif d.intro %}
+          <p class="card-desc">{{ d.intro|striptags|truncatechars:140 }}</p>
+        {% else %}
+          <p class="card-desc">Guía del destino con recomendaciones y secciones clave para organizar el viaje.</p>
+        {% endif %}
+      </div>
+    {% empty %}
+      <p>No hay destinos cargados todavía. Cargá al menos uno desde el admin.</p>
+    {% endfor %}
+  </div>
+</section>
+
+<section style="margin-top:30px;">
+  <div class="section-head">
+    <div>
+      <h2>Guías recientes</h2>
+      <p>Consejos prácticos para ahorrar y viajar mejor.</p>
+    </div>
+    <a href="/guias/">Ver todas →</a>
+  </div>
+
+  <div class="grid">
+    {% for a in articulos %}
+      <div class="card">
+        {% if a.hero_image %}
+          {% image a.hero_image fill-800x500 as img %}
+          <img class="card-img" src="{{ img.url }}" alt="{{ a.title }}" loading="lazy">
+        {% endif %}
+
+        <h3 class="card-title">
+          <a href="{{ a.url }}">{{ a.title }}</a>
+        </h3>
+        {% if a.categoria %}<p class="card-meta">{{ a.categoria.title }} · {{ a.first_published_at|date:"M Y" }}{% if a.last_published_at %} · Actualizado {{ a.last_published_at|date:"M Y" }}{% endif %}</p>{% else %}<p class="card-meta">Guía · {{ a.first_published_at|date:"M Y" }}{% if a.last_published_at %} · Actualizado {{ a.last_published_at|date:"M Y" }}{% endif %}</p>{% endif %}
+
+        {% if a.resumen %}
+          <p class="card-desc">{{ a.resumen|striptags|truncatechars:160 }}</p>
+        {% else %}
+          <p class="card-desc">Guía práctica en español para planificar mejor tu viaje.</p>
+        {% endif %}
+      </div>
+    {% empty %}
+      <p>No hay artículos todavía. Creá uno desde el admin.</p>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="callout article" style="margin-top:34px;">
+  <h3 style="margin-top:0;">¿Querés una recomendación rápida?</h3>
+  <p style="margin:0;">
+    Si me decís tu destino y fechas aproximadas, te puedo sugerir un plan simple (qué hacer, dónde conviene dormir y cómo moverte).
+  </p>
+</section>
+
+{% endblock %}

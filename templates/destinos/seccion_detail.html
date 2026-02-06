@@ -1,0 +1,136 @@
+{% extends "layout/base.html" %}
+{% load static %}
+
+{% block title %}
+{{ seccion.titulo }} | {{ destino.nombre }} | {{ site_name|default:"Turismo" }}
+{% endblock %}
+
+{% block meta_description %}
+{% if seccion.contenido %}
+  {{ seccion.contenido|striptags|truncatechars:155 }}
+{% else %}
+  {{ seccion.titulo }} en {{ destino.nombre }} ({{ pais.nombre }}): guía y consejos.
+{% endif %}
+{% endblock %}
+
+{% block og_type %}article{% endblock %}
+
+{% block og_title %}
+{{ seccion.titulo }} — {{ destino.nombre }} ({{ pais.nombre }})
+{% endblock %}
+
+{% block og_description %}
+{% if seccion.contenido %}
+  {{ seccion.contenido|striptags|truncatechars:155 }}
+{% else %}
+  {{ seccion.titulo }} en {{ destino.nombre }} ({{ pais.nombre }}): guía y consejos.
+{% endif %}
+{% endblock %}
+
+{% block og_image %}
+{% if destino.imagen %}
+  {{ request.scheme }}://{{ request.get_host }}{{ destino.imagen.url }}
+{% else %}
+  {{ request.scheme }}://{{ request.get_host }}{% static 'img/og-default.jpg' %}
+{% endif %}
+{% endblock %}
+
+{% block twitter_title %}
+{{ seccion.titulo }} — {{ destino.nombre }} ({{ pais.nombre }})
+{% endblock %}
+
+{% block twitter_description %}
+{% if seccion.contenido %}
+  {{ seccion.contenido|striptags|truncatechars:155 }}
+{% else %}
+  {{ seccion.titulo }} en {{ destino.nombre }}: consejos y guía práctica.
+{% endif %}
+{% endblock %}
+
+{% block twitter_image %}
+{% if destino.imagen %}
+  {{ request.scheme }}://{{ request.get_host }}{{ destino.imagen.url }}
+{% else %}
+  {{ request.scheme }}://{{ request.get_host }}{% static 'img/og-default.jpg' %}
+{% endif %}
+{% endblock %}
+
+{% block content %}
+
+  <nav class="breadcrumb">
+    <a href="/">Inicio</a> ›
+    <a href="/destinos/">Destinos</a> ›
+    <a href="{% url 'pais_detail' pais.slug %}">{{ pais.nombre }}</a> ›
+    <a href="{% url 'destino_detail' pais.slug destino.slug %}">{{ destino.nombre }}</a> ›
+    {{ seccion.titulo }}
+  </nav>
+
+  <article class="article">
+
+    <header class="article-header">
+
+      {% if destino.imagen %}
+        <img
+          src="{{ destino.imagen.url }}"
+          alt="Viajar a {{ destino.nombre }} ({{ pais.nombre }})"
+          class="hero-img"
+        >
+      {% endif %}
+
+      <h1 class="article-title">{{ seccion.titulo }}</h1>
+
+      <p class="article-excerpt">
+        {% if seccion.contenido %}
+          {{ seccion.contenido|striptags|truncatechars:180 }}
+        {% else %}
+          Si estás organizando un viaje a {{ destino.nombre }}, esta guía te ayuda a decidir mejor antes de ir.
+        {% endif %}
+      </p>
+
+      <div class="article-meta">
+        {% if destino.updated_at %}
+          · Actualizado en {{ destino.updated_at|date:"F Y" }}
+        {% endif %}
+      </div>
+
+    </header>
+
+    <section class="article-content">
+      {{ seccion.contenido|linebreaksbr }}
+    </section>
+
+    {% if otras_secciones %}
+      <section class="related" style="margin-top:28px;">
+        <h2>Otras secciones de {{ destino.nombre }}</h2>
+        <ul class="related-list">
+          {% for s in otras_secciones %}
+            <li>
+              <a href="{% url 'seccion_destino_detail' pais.slug destino.slug s.slug %}">{{ s.titulo }}</a>
+            </li>
+          {% endfor %}
+        </ul>
+      </section>
+    {% endif %}
+
+    {% if articulos_relacionados %}
+      <section class="related" style="margin-top:18px;">
+        <h2>Guías relacionadas</h2>
+        <div class="grid">
+          {% for a in articulos_relacionados %}
+            {% include "partials/_articulo_card.html" %}
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+
+    <aside class="callout">
+      <h3>Consejo rápido</h3>
+      <p>
+        Si es tu primera vez en {{ destino.nombre }}, conviene definir alojamiento y actividades con anticipación,
+        especialmente en temporada alta.
+      </p>
+    </aside>
+
+  </article>
+
+{% endblock %}

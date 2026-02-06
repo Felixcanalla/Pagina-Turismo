@@ -1,0 +1,21 @@
+<section class="block block-map">
+  {% if value.title %}
+    <h3 class="block-title">{{ value.title }}</h3>
+  {% endif %}
+
+  {% if value.map_url %}
+    <div class="map-embed">
+      <iframe
+        src="{{ value.map_url }}"
+        width="100%"
+        height="450"
+        style="border:0;"
+        allowfullscreen=""
+        loading="lazy"
+        referrerpolicy="no-referrer-when-downgrade">
+      </iframe>
+    </div>
+  {% else %}
+    <p class="muted">No hay mapa cargado.</p>
+  {% endif %}
+</section>

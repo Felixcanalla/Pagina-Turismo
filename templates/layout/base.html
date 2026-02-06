@@ -1,0 +1,191 @@
+{% load static %}
+<!doctype html>
+<html lang="es-ar">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <title>{% block title %}{{ site_name|default:"Guía de Viajes" }}{% endblock %}</title>
+
+  <meta name="description" content="{% block meta_description %}{% if page.seo_description %}{{ page.seo_description }}{% else %}Guías de viaje en español con itinerarios, consejos y destinos para organizar tu próximo viaje.{% endif %}{% endblock %}">
+
+
+  {# Canonical y OG URL #}
+{% if canonical_url %}
+  <link rel="canonical" href="{{ canonical_url }}">
+  <meta property="og:url" content="{{ canonical_url }}">
+{% elif request %}
+  <link rel="canonical" href="{{ request.build_absolute_uri }}">
+  <meta property="og:url" content="{{ request.build_absolute_uri }}">
+{% else %}
+  <link rel="canonical" href="/">
+  <meta property="og:url" content="/">
+{% endif %}
+
+
+  <meta property="og:site_name" content="{{ site_name|default:"Guía de Viajes" }}">
+  <meta property="og:locale" content="es_AR">
+  <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+  <meta property="og:title" content="{% block og_title %}{{ site_name|default:"Guía de Viajes" }}{% endblock %}">
+  <meta property="og:description" content="{% block og_description %}{% if page.seo_description %}{{ page.seo_description }}{% else %}Guías de viaje en español con itinerarios, consejos y destinos.{% endif %}{% endblock %}">
+
+  {# OG image default (absoluta si hay request, relativa si no) #}
+  <meta property="og:image" content="{% block og_image %}{% if request %}{{ request.scheme }}://{{ request.get_host }}{% endif %}{% static 'img/og-default.jpg' %}{% endblock %}">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{% block twitter_title %}{{ site_name|default:"Guía de Viajes" }}{% endblock %}">
+  <meta name="twitter:description" content="{% block twitter_description %}Guías de viaje en español con itinerarios, consejos y destinos.{% endblock %}">
+
+  {# Twitter image default (absoluta si hay request, relativa si no) #}
+  <meta name="twitter:image" content="{% block twitter_image %}{% if request %}{{ request.scheme }}://{{ request.get_host }}{% endif %}{% static 'img/og-default.jpg' %}{% endblock %}">
+
+  {# (Opcional) Si tenés usuario en Twitter/X, agregalo en contexto como twitter_site='@...' #}
+  {% if twitter_site %}
+    <meta name="twitter:site" content="{{ twitter_site }}">
+  {% endif %}
+
+  {# (Opcional) favicon #}
+  <link rel="icon" href="{% static 'img/favicon.ico' %}">
+
+  <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+
+<body id="top">
+  <header class="site-header">
+    <div class="container">
+      <div class="nav">
+      <a class="brand" href="/">{{ site_name|default:"Guía de Viajes" }}</a>
+
+        <nav class="nav-links">
+          <a href="/">Inicio</a>
+
+          <a href="/destinos/">Destinos</a>
+          <a href="/guias/">Guías</a>
+          <a href="/sobre/">Sobre</a>
+          <a href="/contacto/">Contacto</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="main">
+    <div class="container">
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+
+ <footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a class="footer-logo" href="/">Turismo</a>
+        <p class="footer-text">
+          Guías y destinos para planear tu próximo viaje. Contenido editorial creado desde nuestro CMS.
+        </p>
+      </div>
+
+      <div class="footer-col">
+        <h4>Explorar</h4>
+        <ul>
+          <li><a href="/destinos/">Destinos</a></li>
+          <li><a href="/guias/">Guías</a></li>
+          <li><a href="/sobre/">Sobre</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="/politica-privacidad/">Política de privacidad</a></li>
+          <li><a href="/terminos-condiciones/">Términos y condiciones</a></li>
+          <li><a href="/aviso-afiliados/">Aviso de afiliados</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Contacto</h4>
+        <ul>
+          <li><a href="/contacto/">Escribinos</a></li>
+          <li><a href="mailto:contacto@tusitio.com">contacto@tusitio.com</a></li>
+        </ul>
+
+        <div class="footer-social">
+  <a class="social" href="#" aria-label="Instagram">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5zm10 2H7a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3zm-5 3.5A4.5 4.5 0 1 1 7.5 12 4.51 4.51 0 0 1 12 7.5zm0 2A2.5 2.5 0 1 0 14.5 12 2.5 2.5 0 0 0 12 9.5zm4.75-2.25a1 1 0 1 1-1 1 1 1 0 0 1 1-1z"/>
+    </svg>
+  </a>
+
+  <a class="social" href="#" aria-label="Facebook">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M22 12a10 10 0 1 0-11.56 9.88v-7H8v-2.88h2.44V9.41c0-2.42 1.44-3.76 3.64-3.76 1.05 0 2.15.19 2.15.19v2.36h-1.21c-1.19 0-1.56.74-1.56 1.5v1.8h2.66L15.7 14.88h-2.24v7A10 10 0 0 0 22 12z"/>
+    </svg>
+  </a>
+
+  <a class="social" href="#" aria-label="YouTube">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.6 3.5 12 3.5 12 3.5s-7.6 0-9.4.6A3 3 0 0 0 .5 6.2 31.4 31.4 0 0 0 0 12a31.4 31.4 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.8.6 9.4.6 9.4.6s7.6 0 9.4-.6a3 3 0 0 0 2.1-2.1A31.4 31.4 0 0 0 24 12a31.4 31.4 0 0 0-.5-5.8zM9.5 15.5v-7l6 3.5-6 3.5z"/>
+    </svg>
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <span>© <span id="year"></span> Turismo. Todos los derechos reservados.</span>
+
+      <span class="footer-madeby">
+        Hecho por <a href="#" target="_blank" rel="noopener">TU NOMBRE / MARCA</a>
+      </span>
+
+      <a class="to-top" href="#top" aria-label="Volver arriba">↑ Volver arriba</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  document.getElementById("year").textContent = new Date().getFullYear();
+</script>
+
+<script>
+  // año automático
+  document.getElementById("year").textContent = new Date().getFullYear();
+</script>
+
+
+  {# Script TOC: resalta sección activa mientras scrolleás (solo si hay TOC) #}
+  <script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const tocLinks = Array.from(document.querySelectorAll(".toc__link"));
+    if (!tocLinks.length) return;
+
+    const targets = tocLinks
+      .map(a => document.getElementById(a.getAttribute("href").slice(1)))
+      .filter(Boolean);
+
+    if (!targets.length) return;
+
+    const setActive = (id) => {
+      tocLinks.forEach(a => {
+        a.classList.toggle("is-active", a.getAttribute("href") === "#" + id);
+      });
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      const visible = entries
+        .filter(e => e.isIntersecting)
+        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+
+      if (visible) setActive(visible.target.id);
+    }, {
+      threshold: [0.2, 0.4, 0.6],
+      rootMargin: "-10% 0px -70% 0px"
+    });
+
+    targets.forEach(t => observer.observe(t));
+    setActive(targets[0].id);
+  });
+  </script>
+</body>
+</html>

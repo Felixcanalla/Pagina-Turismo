@@ -1,0 +1,5 @@
+{% load wagtailimages_tags %}
+<figure class="block block-image">
+  {% image value.image width-1200 %}
+  {% if value.caption %}<figcaption class="muted">{{ value.caption }}</figcaption>{% endif %}
+</figure>

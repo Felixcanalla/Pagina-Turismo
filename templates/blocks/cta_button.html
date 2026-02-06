@@ -1,0 +1,9 @@
+<section class="block block-cta">
+  <a class="btn btn-primary" href="{{ value.url }}" target="_blank" rel="nofollow sponsored noopener">
+    {{ value.text }}
+  </a>
+
+  {% if value.note %}
+    <p class="cta-note">{{ value.note }}</p>
+  {% endif %}
+</section>

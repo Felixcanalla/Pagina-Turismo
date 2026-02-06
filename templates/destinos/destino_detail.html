@@ -1,0 +1,131 @@
+{% extends "layout/base.html" %}
+{% load static %}
+
+{% block title %}
+{{ destino.nombre }} | {{ pais.nombre }} | {{ site_name|default:"Turismo" }}
+{% endblock %}
+
+{% block meta_description %}
+{% if destino.resumen %}
+  {{ destino.resumen|striptags|truncatechars:155 }}
+{% elif destino.contenido %}
+  {{ destino.contenido|striptags|truncatechars:155 }}
+{% else %}
+  Guía de {{ destino.nombre }} ({{ pais.nombre }}): qué hacer, cuándo ir, cómo llegar y consejos para tu viaje.
+{% endif %}
+{% endblock %}
+
+{% block og_type %}website{% endblock %}
+
+{% block og_title %}
+{{ destino.nombre }} — {{ pais.nombre }}
+{% endblock %}
+
+{% block og_description %}
+{% if destino.resumen %}
+  {{ destino.resumen|striptags|truncatechars:155 }}
+{% elif destino.contenido %}
+  {{ destino.contenido|striptags|truncatechars:155 }}
+{% else %}
+  Guía de {{ destino.nombre }} ({{ pais.nombre }}): qué hacer, cuándo ir, cómo llegar y consejos para tu viaje.
+{% endif %}
+{% endblock %}
+
+{% block og_image %}
+{% if destino.imagen %}
+  {{ request.scheme }}://{{ request.get_host }}{{ destino.imagen.url }}
+{% else %}
+  {{ request.scheme }}://{{ request.get_host }}{% static 'img/og-default.jpg' %}
+{% endif %}
+{% endblock %}
+
+{% block twitter_title %}
+{{ destino.nombre }} — {{ pais.nombre }}
+{% endblock %}
+
+{% block twitter_description %}
+{% if destino.resumen %}
+  {{ destino.resumen|striptags|truncatechars:155 }}
+{% elif destino.contenido %}
+  {{ destino.contenido|striptags|truncatechars:155 }}
+{% else %}
+  Guía de {{ destino.nombre }} ({{ pais.nombre }}).
+{% endif %}
+{% endblock %}
+
+{% block twitter_image %}
+{% if destino.imagen %}
+  {{ request.scheme }}://{{ request.get_host }}{{ destino.imagen.url }}
+{% else %}
+  {{ request.scheme }}://{{ request.get_host }}{% static 'img/og-default.jpg' %}
+{% endif %}
+{% endblock %}
+
+{% block content %}
+
+  <nav class="breadcrumb">
+    <a href="/">Inicio</a> ›
+    <a href="/destinos/">Destinos</a> ›
+    <a href="{% url 'pais_detail' pais.slug %}">{{ pais.nombre }}</a> ›
+    {{ destino.nombre }}
+  </nav>
+
+  <article class="article">
+
+    {% if destino.imagen %}
+      <img src="{{ destino.imagen.url }}" alt="Viajar a {{ destino.nombre }} ({{ pais.nombre }})" class="hero-img">
+    {% endif %}
+
+    <header class="article-header">
+      <h1 class="article-title">{{ destino.nombre }}</h1>
+
+      {% if destino.resumen %}
+        <p class="article-excerpt">{{ destino.resumen|striptags }}</p>
+      {% elif destino.contenido %}
+        <p class="article-excerpt">{{ destino.contenido|striptags|truncatechars:180 }}</p>
+      {% else %}
+        <p class="article-excerpt">
+          Guía editorial de {{ destino.nombre }}: qué hacer, cuándo ir, cómo llegar y consejos útiles.
+        </p>
+      {% endif %}
+
+      <div class="article-meta">
+        {% if destino.updated_at %}
+          Actualizado en {{ destino.updated_at|date:"F Y" }}
+        {% endif %}
+      </div>
+    </header>
+
+    {% if destino.contenido %}
+      <section class="article-content">
+        {{ destino.contenido|linebreaksbr }}
+      </section>
+    {% endif %}
+
+    {% if secciones %}
+      <section class="related" style="margin-top:28px;">
+        <h2>Secciones de {{ destino.nombre }}</h2>
+        <ul class="related-list">
+          {% for s in secciones %}
+            <li>
+              <a href="{% url 'seccion_destino_detail' pais.slug destino.slug s.slug %}">{{ s.titulo }}</a>
+            </li>
+          {% endfor %}
+        </ul>
+      </section>
+    {% endif %}
+
+    {% if articulos_relacionados %}
+      <section class="related" style="margin-top:18px;">
+        <h2>Guías relacionadas</h2>
+        <div class="grid">
+          {% for a in articulos_relacionados %}
+            {% include "partials/_articulo_card.html" %}
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+
+  </article>
+
+{% endblock %}

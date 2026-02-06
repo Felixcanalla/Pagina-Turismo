@@ -1,0 +1,23 @@
+{# templates/blocks/highlights.html #}
+<section class="block block-highlights">
+  {% if value.title %}
+    <header class="block-head">
+      <h3 class="block-title">{{ value.title }}</h3>
+    </header>
+  {% endif %}
+
+  <ul class="highlights-list">
+    {% for item in value.items %}
+      <li class="highlight">
+        <div class="highlight-dot" aria-hidden="true"></div>
+
+        <div class="highlight-body">
+          <div class="highlight-title">{{ item.title }}</div>
+          {% if item.text %}
+            <div class="highlight-text">{{ item.text }}</div>
+          {% endif %}
+        </div>
+      </li>
+    {% endfor %}
+  </ul>
+</section>

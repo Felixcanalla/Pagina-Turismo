@@ -1,0 +1,21 @@
+{% extends "layout/base.html" %}
+{% load wagtailcore_tags %}
+
+{% block content %}
+<section class="section">
+  <h1>{{ page.title }}</h1>
+
+  {% if paises %}
+    <div class="grid">
+      {% for pais in paises %}
+        <article class="card">
+          <h2><a href="{{ pais.url }}">{{ pais.title }}</a></h2>
+          {% if pais.descripcion_corta %}<p>{{ pais.descripcion_corta }}</p>{% endif %}
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p>No hay países publicados todavía.</p>
+  {% endif %}
+</section>
+{% endblock %}

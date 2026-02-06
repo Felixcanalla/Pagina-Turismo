@@ -1,0 +1,18 @@
+{# templates/blocks/gallery.html #}
+{% load wagtailimages_tags %}
+
+<section class="block block-gallery">
+  {% if value.title %}
+    <header class="block-head">
+      <h3 class="block-title">{{ value.title }}</h3>
+    </header>
+  {% endif %}
+
+  <div class="gallery-grid">
+    {% for img in value.images %}
+      <figure class="gallery-item">
+        {% image img fill-520x360 class="gallery-img" loading="lazy" %}
+      </figure>
+    {% endfor %}
+  </div>
+</section>

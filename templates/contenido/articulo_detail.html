@@ -1,0 +1,141 @@
+{% extends "layout/base.html" %}
+{% load static %}
+
+{% block title %}
+{{ articulo.titulo }} | {{ site_name|default:"Turismo" }}
+{% endblock %}
+
+{% block meta_description %}
+{% if articulo.extracto %}
+  {{ articulo.extracto|striptags|truncatechars:155 }}
+{% else %}
+  {{ articulo.contenido|striptags|truncatechars:155 }}
+{% endif %}
+{% endblock %}
+
+{% block og_type %}article{% endblock %}
+
+{% block og_title %}
+{{ articulo.titulo }}
+{% endblock %}
+
+{% block og_description %}
+{% if articulo.extracto %}
+  {{ articulo.extracto|striptags|truncatechars:155 }}
+{% else %}
+  {{ articulo.contenido|striptags|truncatechars:155 }}
+{% endif %}
+{% endblock %}
+
+{% block og_image %}
+{% if articulo.imagen %}
+  {{ request.scheme }}://{{ request.get_host }}{{ articulo.imagen.url }}
+{% else %}
+  {{ request.scheme }}://{{ request.get_host }}{% static 'img/og-default.jpg' %}
+{% endif %}
+{% endblock %}
+
+{% block twitter_title %}
+{{ articulo.titulo }}
+{% endblock %}
+
+{% block twitter_description %}
+{% if articulo.extracto %}
+  {{ articulo.extracto|striptags|truncatechars:155 }}
+{% else %}
+  {{ articulo.contenido|striptags|truncatechars:155 }}
+{% endif %}
+{% endblock %}
+
+{% block twitter_image %}
+{% if articulo.imagen %}
+  {{ request.scheme }}://{{ request.get_host }}{{ articulo.imagen.url }}
+{% else %}
+  {{ request.scheme }}://{{ request.get_host }}{% static 'img/og-default.jpg' %}
+{% endif %}
+{% endblock %}
+
+{% block content %}
+
+  <!-- Breadcrumb -->
+  <nav class="breadcrumb">
+    <a href="/">Inicio</a> ›
+    <a href="/guias/">Guías</a> ›
+    <a href="{% url 'categoria_list' categoria.slug %}">{{ categoria.nombre }}</a>
+  </nav>
+
+  <article class="article">
+    <header style="margin-bottom:24px;">
+
+      {% if articulo.imagen %}
+        <img class="hero-img" src="{{ articulo.imagen.url }}" alt="Guía: {{ articulo.titulo }}">
+      {% endif %}
+
+      <h1>{{ articulo.titulo }}</h1>
+
+      {% if articulo.extracto %}
+        <p style="font-size:18px;color:var(--muted);">
+          {{ articulo.extracto }}
+        </p>
+      {% else %}
+        <p style="font-size:18px;color:var(--muted);">
+          Guía práctica en español para ayudarte a planificar mejor tu viaje.
+        </p>
+      {% endif %}
+
+      {# ✅ Enlaces cruzados: Guía → Destinos #}
+      {% if destinos %}
+        <p class="breadcrumb" style="margin-top:10px;">
+          Relacionado con:
+          {% for d in destinos %}
+            <a href="{% url 'destino_detail' d.pais.slug d.slug %}">{{ d.nombre }}</a>{% if not forloop.last %} · {% endif %}
+          {% endfor %}
+        </p>
+      {% endif %}
+
+      <div style="font-size:14px;color:var(--muted);margin-top:8px;">
+        Por <strong>Patricio</strong> · Publicado {{ articulo.created_at|date:"F Y" }}
+        {% if articulo.updated_at %}
+          · Actualizado {{ articulo.updated_at|date:"F Y" }}
+        {% endif %}
+      </div>
+    </header>
+
+    <!-- Contenido -->
+    <section style="font-size:18px;">
+      {{ articulo.contenido|safe }}
+    </section>
+
+    <!-- CTA editorial (sin afiliados aún) -->
+    <aside class="callout">
+      <h3 style="margin-top:0;">Tip rápido</h3>
+      <p style="margin:0;">
+        Guardá esta guía y volvé a revisarla antes de comprar: pequeños cambios de fecha y horario
+        suelen impactar mucho en el precio final.
+      </p>
+    </aside>
+
+    {% if relacionados %}
+      <section style="margin-top:34px;">
+        <div class="section-head">
+          <div>
+            <h2>Artículos relacionados</h2>
+            <p>Para seguir planificando sin salir del tema.</p>
+          </div>
+        </div>
+
+        <div class="grid">
+          {% for a in relacionados %}
+            {% include "partials/_articulo_card.html" %}
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+
+    <!-- Navegación simple -->
+    <p style="margin-top:26px;">
+      ← <a href="{% url 'categoria_list' categoria.slug %}">Volver a {{ categoria.nombre }}</a>
+    </p>
+  </article>
+
+{% endblock %}

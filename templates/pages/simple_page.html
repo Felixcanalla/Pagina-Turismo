@@ -1,0 +1,17 @@
+{% extends "layout/base.html" %}
+{% load wagtailcore_tags %}
+
+
+{% block title %}{{ page.title }} | {{ site_name|default:"Guía de Viajes" }}{% endblock %}
+
+{% block content %}
+<section class="section">
+  <h1>{{ page.title }}</h1>
+
+  {% if page.body %}
+    <div class="prose">
+      {% include_block page.body %}
+    </div>
+  {% endif %}
+</section>
+{% endblock %}
