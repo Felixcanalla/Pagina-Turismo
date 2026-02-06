@@ -1,0 +1,19 @@
+{% load wagtailimages_tags static %}
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TouristDestination",
+  "name": "{{ page.title|escapejs }}",
+  "description": "{% if page.seo_description %}{{ page.seo_description|escapejs }}{% elif page.intro %}{{ page.intro|escapejs }}{% else %}{% endif %}",
+  "url": "{% if page.full_url %}{{ page.full_url|escapejs }}{% else %}{{ request.build_absolute_uri|escapejs }}{% endif %}",
+  "image": [
+    {% if page.hero_image %}
+      {% image page.hero_image fill-1200x630 as img %}
+      "{{ request.scheme }}://{{ request.get_host }}{{ img.url }}"
+    {% else %}
+      "{{ request.scheme }}://{{ request.get_host }}{% static 'img/og-default.jpg' %}"
+    {% endif %}
+  ]
+}
+</script>

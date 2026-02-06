@@ -1194,3 +1194,36 @@ html { scroll-behavior: smooth; }
   font-size: 14px;
   line-height: 1.5;
 }
+
+
+.breadcrumbs {
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.breadcrumbs ol {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0;
+  margin: 0;
+}
+
+.breadcrumbs li::after {
+  content: "›";
+  margin-left: 0.4rem;
+}
+
+.breadcrumbs li:last-child::after {
+  content: "";
+}
+
+.breadcrumbs a {
+  color: #555;
+  text-decoration: none;
+}
+
+.breadcrumbs a:hover {
+  text-decoration: underline;
+}

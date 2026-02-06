@@ -1,11 +1,33 @@
 {% extends "base.html" %}
 {% load wagtailimages_tags %}
 
+{% block extra_head %}
+  <!-- EXTRA_HEAD OK -->
+
+  {% include "partials/jsonld_destination.html" %}
+  {% include "partials/jsonld_breadcrumbs.html" %}
+{% endblock %}
+
 {% block content %}
   <article class="container">
 
     <header class="hero hero--stack">
       <div class="hero-stack">
+
+        <nav class="breadcrumbs" aria-label="Breadcrumb">
+          <ol>
+            <li><a href="/">Inicio</a></li>
+
+            {% for ancestor in page.get_ancestors %}
+              {% if not ancestor.is_root and ancestor.depth > 1 %}
+                <li><a href="{{ ancestor.url }}">{{ ancestor.title }}</a></li>
+              {% endif %}
+            {% endfor %}
+
+            <li aria-current="page">{{ page.title }}</li>
+          </ol>
+        </nav>
+
         <h1>{{ page.title }}</h1>
         {% if page.intro %}<p class="muted">{{ page.intro }}</p>{% endif %}
       </div>

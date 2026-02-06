@@ -1,0 +1,34 @@
+{% load wagtailcore_tags %}
+
+{% with ancestors=page.get_ancestors %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Inicio",
+      "item": "{{ request.scheme }}://{{ request.get_host }}/"
+    }
+    {% for ancestor in ancestors %}
+      {% if not ancestor.is_root and ancestor.depth > 1 %}
+        ,{
+          "@type": "ListItem",
+          "position": {{ forloop.counter|add:1 }},
+          "name": "{{ ancestor.title|escapejs }}",
+          "item": "{{ request.scheme }}://{{ request.get_host }}{{ ancestor.url }}"
+        }
+      {% endif %}
+    {% endfor %}
+    ,{
+      "@type": "ListItem",
+      "position": {{ ancestors|length|add:2 }},
+      "name": "{{ page.title|escapejs }}",
+      "item": "{{ page.full_url }}"
+    }
+  ]
+}
+</script>
+{% endwith %}

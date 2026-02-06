@@ -1,6 +1,14 @@
 {% extends "base.html" %}
 {% load wagtailcore_tags wagtailimages_tags %}
 
+{% block extra_head %}
+  {# ✅ JSON-LD BreadcrumbList para destinos #}
+  {% include "partials/jsonld_breadcrumbs.html" %}
+
+  {# ✅ JSON-LD TouristDestination (mejor que Article para destinos) #}
+  {% include "partials/jsonld_destination.html" %}
+{% endblock %}
+
 {% block content %}
   <article class="container">
 
@@ -10,6 +18,22 @@
       {% endif %}
 
       <div class="hero-content">
+
+        {# ✅ Breadcrumbs visuales #}
+        <nav class="breadcrumbs" aria-label="Breadcrumb">
+          <ol>
+            <li><a href="/">Inicio</a></li>
+
+            {% for ancestor in page.get_ancestors %}
+              {% if not ancestor.is_root and ancestor.depth > 1 %}
+                <li><a href="{{ ancestor.url }}">{{ ancestor.title }}</a></li>
+              {% endif %}
+            {% endfor %}
+
+            <li aria-current="page">{{ page.title }}</li>
+          </ol>
+        </nav>
+
         <h1>{{ page.title }}</h1>
         {% if page.intro %}<p>{{ page.intro }}</p>{% endif %}
       </div>

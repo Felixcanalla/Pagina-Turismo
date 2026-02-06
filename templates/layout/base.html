@@ -1,64 +1,31 @@
 {% load static %}
+
 <!doctype html>
 <html lang="es-ar">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <title>{% block title %}{{ site_name|default:"Guía de Viajes" }}{% endblock %}</title>
+  {# ✅ SEO/OG/Twitter centralizado (sin duplicados) #}
+  {% include "partials/seo_meta.html" %}
 
-  <meta name="description" content="{% block meta_description %}{% if page.seo_description %}{{ page.seo_description }}{% else %}Guías de viaje en español con itinerarios, consejos y destinos para organizar tu próximo viaje.{% endif %}{% endblock %}">
+  {# ✅ Para JSON-LD de artículos, breadcrumbs, etc. #}
+  {% block extra_head %}{% endblock %}
 
-
-  {# Canonical y OG URL #}
-{% if canonical_url %}
-  <link rel="canonical" href="{{ canonical_url }}">
-  <meta property="og:url" content="{{ canonical_url }}">
-{% elif request %}
-  <link rel="canonical" href="{{ request.build_absolute_uri }}">
-  <meta property="og:url" content="{{ request.build_absolute_uri }}">
-{% else %}
-  <link rel="canonical" href="/">
-  <meta property="og:url" content="/">
-{% endif %}
-
-
-  <meta property="og:site_name" content="{{ site_name|default:"Guía de Viajes" }}">
-  <meta property="og:locale" content="es_AR">
-  <meta property="og:type" content="{% block og_type %}website{% endblock %}">
-  <meta property="og:title" content="{% block og_title %}{{ site_name|default:"Guía de Viajes" }}{% endblock %}">
-  <meta property="og:description" content="{% block og_description %}{% if page.seo_description %}{{ page.seo_description }}{% else %}Guías de viaje en español con itinerarios, consejos y destinos.{% endif %}{% endblock %}">
-
-  {# OG image default (absoluta si hay request, relativa si no) #}
-  <meta property="og:image" content="{% block og_image %}{% if request %}{{ request.scheme }}://{{ request.get_host }}{% endif %}{% static 'img/og-default.jpg' %}{% endblock %}">
-
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="{% block twitter_title %}{{ site_name|default:"Guía de Viajes" }}{% endblock %}">
-  <meta name="twitter:description" content="{% block twitter_description %}Guías de viaje en español con itinerarios, consejos y destinos.{% endblock %}">
-
-  {# Twitter image default (absoluta si hay request, relativa si no) #}
-  <meta name="twitter:image" content="{% block twitter_image %}{% if request %}{{ request.scheme }}://{{ request.get_host }}{% endif %}{% static 'img/og-default.jpg' %}{% endblock %}">
-
-  {# (Opcional) Si tenés usuario en Twitter/X, agregalo en contexto como twitter_site='@...' #}
-  {% if twitter_site %}
-    <meta name="twitter:site" content="{{ twitter_site }}">
-  {% endif %}
-
-  {# (Opcional) favicon #}
   <link rel="icon" href="{% static 'img/favicon.ico' %}">
-
   <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+
+
 </head>
 
 <body id="top">
   <header class="site-header">
     <div class="container">
       <div class="nav">
-      <a class="brand" href="/">{{ site_name|default:"Guía de Viajes" }}</a>
+        <a class="brand" href="/">{{ site_name|default:"Guía de Viajes" }}</a>
 
         <nav class="nav-links">
           <a href="/">Inicio</a>
-
           <a href="/destinos/">Destinos</a>
           <a href="/guias/">Guías</a>
           <a href="/sobre/">Sobre</a>
