@@ -1,6 +1,7 @@
 {% load wagtailcore_tags %}
 
-{% with ancestors=page.get_ancestors %}
+{% load wagtailcore_tags %}
+
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -12,23 +13,20 @@
       "name": "Inicio",
       "item": "{{ request.scheme }}://{{ request.get_host }}/"
     }
-    {% for ancestor in ancestors %}
-      {% if not ancestor.is_root and ancestor.depth > 1 %}
-        ,{
-          "@type": "ListItem",
-          "position": {{ forloop.counter|add:1 }},
-          "name": "{{ ancestor.title|escapejs }}",
-          "item": "{{ request.scheme }}://{{ request.get_host }}{{ ancestor.url }}"
-        }
-      {% endif %}
+    {% for ancestor in breadcrumb_ancestors %}
+      ,{
+        "@type": "ListItem",
+        "position": {{ forloop.counter|add:1 }},
+        "name": "{{ ancestor.title|escapejs }}",
+        "item": "{{ request.scheme }}://{{ request.get_host }}{{ ancestor.url }}"
+      }
     {% endfor %}
     ,{
       "@type": "ListItem",
-      "position": {{ ancestors|length|add:2 }},
+      "position": {{ breadcrumb_ancestors|length|add:2 }},
       "name": "{{ page.title|escapejs }}",
-      "item": "{{ page.full_url }}"
+      "item": "{% if page.full_url %}{{ page.full_url|escapejs }}{% else %}{{ request.build_absolute_uri|escapejs }}{% endif %}"
     }
   ]
 }
 </script>
-{% endwith %}

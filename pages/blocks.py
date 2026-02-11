@@ -1,4 +1,3 @@
-# pages/blocks.py
 from wagtail import blocks
 from wagtail.embeds.blocks import EmbedBlock
 from wagtail.images.blocks import ImageChooserBlock
@@ -74,7 +73,6 @@ class MapEmbedBlock(blocks.StructBlock):
         template = "blocks/map_embed.html"
 
 
-
 class CTAButtonBlock(blocks.StructBlock):
     text = blocks.CharBlock(required=True, max_length=40)
     url = blocks.URLBlock(required=True)
@@ -92,3 +90,26 @@ class YouTubeBlock(blocks.StructBlock):
     class Meta:
         icon = "media"
         template = "blocks/youtube.html"
+
+
+# ✅ FAQ PRO (1 bloque con lista de preguntas)
+class FAQItemBlock(blocks.StructBlock):
+    question = blocks.CharBlock(required=True, label="Pregunta", max_length=180)
+    answer = blocks.RichTextBlock(
+        required=True,
+        label="Respuesta",
+        features=["bold", "italic", "link", "ul", "ol"],
+    )
+
+    class Meta:
+        icon = "help"
+        label = "Pregunta frecuente"
+
+
+class FAQBlock(blocks.StructBlock):
+    title = blocks.CharBlock(required=False, label="Título (opcional)", default="Preguntas frecuentes")
+    items = blocks.ListBlock(FAQItemBlock(), label="Preguntas", min_num=1)
+
+    class Meta:
+        icon = "help"
+        label = "FAQ"

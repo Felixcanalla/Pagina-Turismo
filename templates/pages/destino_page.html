@@ -2,11 +2,14 @@
 {% load wagtailcore_tags wagtailimages_tags %}
 
 {% block extra_head %}
-  {# ✅ JSON-LD BreadcrumbList para destinos #}
+
+  {# JSON-LD BreadcrumbList para destinos (asegurate de que el parcial también filtre depth >= 4) #}
   {% include "partials/jsonld_breadcrumbs.html" %}
 
-  {# ✅ JSON-LD TouristDestination (mejor que Article para destinos) #}
+  {# JSON-LD TouristDestination #}
   {% include "partials/jsonld_destination.html" %}
+  {% include "partials/jsonld_faq.html" %}
+
 {% endblock %}
 
 {% block content %}
@@ -19,16 +22,14 @@
 
       <div class="hero-content">
 
-        {# ✅ Breadcrumbs visuales #}
+        {# Breadcrumbs visuales (limpios) #}
         <nav class="breadcrumbs" aria-label="Breadcrumb">
           <ol>
             <li><a href="/">Inicio</a></li>
 
-            {% for ancestor in page.get_ancestors %}
-              {% if not ancestor.is_root and ancestor.depth > 1 %}
-                <li><a href="{{ ancestor.url }}">{{ ancestor.title }}</a></li>
-              {% endif %}
-            {% endfor %}
+            {% for ancestor in breadcrumb_ancestors %}
+  <li><a href="{{ ancestor.url }}">{{ ancestor.title }}</a></li>
+{% endfor %}
 
             <li aria-current="page">{{ page.title }}</li>
           </ol>
@@ -36,14 +37,115 @@
 
         <h1>{{ page.title }}</h1>
         {% if page.intro %}<p>{{ page.intro }}</p>{% endif %}
+
+        {# Tags (si existen) #}
+        {% if page.tags.exists %}
+          <div class="tags">
+            {% for t in page.tags.all %}
+              <span class="tag">{{ t.name }}</span>
+            {% endfor %}
+          </div>
+        {% endif %}
+
       </div>
     </header>
 
     <div class="content post-shell">
       {% if page.body %}
         {% include_block page.body %}
+
       {% endif %}
+      {% if ctas %}
+  <section class="cta-stack">
+    <h2>Recomendaciones para tu viaje</h2>
+
+    {% if ctas_source == "manual" %}
+      {# StreamField: usa el template real del bloque #}
+      {% for block in ctas %}
+        {% include_block block %}
+      {% endfor %}
+    {% else %}
+      {# Lista de dicts: reusa el mismo HTML del CTA #}
+      {% for cta in ctas %}
+        {% include "partials/cta_button.html" with url=cta.url text=cta.button_text note=cta.note %}
+      {% endfor %}
+    {% endif %}
+  </section>
+
+{% endif %}
+
+{% if page.faq_1_q and page.faq_1_a %}
+<section class="faq">
+  <h2>Preguntas frecuentes</h2>
+
+  <details>
+    <summary>{{ page.faq_1_q }}</summary>
+    <p>{{ page.faq_1_a }}</p>
+  </details>
+
+  {% if page.faq_2_q and page.faq_2_a %}
+  <details>
+    <summary>{{ page.faq_2_q }}</summary>
+    <p>{{ page.faq_2_a }}</p>
+  </details>
+  {% endif %}
+
+  {% if page.faq_3_q and page.faq_3_a %}
+  <details>
+    <summary>{{ page.faq_3_q }}</summary>
+    <p>{{ page.faq_3_a }}</p>
+  </details>
+  {% endif %}
+</section>
+{% endif %}
+
+
+   {% if page.faq %}
+  <section class="faq">
+    {% for block in page.faq %}
+      {% if block.block_type == "faq" %}
+        <h2>{{ block.value.title|default:"Preguntas frecuentes" }}</h2>
+
+        {% for item in block.value.items %}
+          <details class="faq-item">
+            <summary>{{ item.question }}</summary>
+            <div class="faq-answer">
+              {{ item.answer|richtext }}
+            </div>
+          </details>
+        {% endfor %}
+      {% endif %}
+    {% endfor %}
+  </section>
+{% endif %}
+
+
+
     </div>
+
+    {# Destinos relacionados #}
+    {% if related_destinos %}
+      <section class="related">
+        <h2>Otros destinos que te pueden gustar</h2>
+
+        <div class="grid">
+          {% for d in related_destinos %}
+            <a class="card" href="{{ d.url }}">
+              {% if d.hero_image %}
+                {% image d.hero_image fill-600x350 class="card-img" %}
+              {% endif %}
+
+              <div class="card-body">
+                <h3>{{ d.title }}</h3>
+                {% if d.intro %}<p class="muted">{{ d.intro }}</p>{% endif %}
+              </div>
+            </a>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+
+
 
   </article>
 {% endblock %}

@@ -2,10 +2,10 @@
 {% load wagtailimages_tags %}
 
 {% block extra_head %}
-  <!-- EXTRA_HEAD OK -->
-
-  {% include "partials/jsonld_destination.html" %}
   {% include "partials/jsonld_breadcrumbs.html" %}
+  {% include "partials/jsonld_article.html" %}
+    {% include "partials/jsonld_faq.html" %}
+
 {% endblock %}
 
 {% block content %}
@@ -18,11 +18,10 @@
           <ol>
             <li><a href="/">Inicio</a></li>
 
-            {% for ancestor in page.get_ancestors %}
-              {% if not ancestor.is_root and ancestor.depth > 1 %}
-                <li><a href="{{ ancestor.url }}">{{ ancestor.title }}</a></li>
-              {% endif %}
-            {% endfor %}
+          {% for ancestor in breadcrumb_ancestors %}
+  <li><a href="{{ ancestor.url }}">{{ ancestor.title }}</a></li>
+{% endfor %}
+
 
             <li aria-current="page">{{ page.title }}</li>
           </ol>

@@ -1,5 +1,5 @@
 {% extends "layout/base.html" %}
-{% load wagtailcore_tags %}
+{% load wagtailcore_tags wagtailimages_tags %}
 
 {% block content %}
 <section class="section">
@@ -8,9 +8,21 @@
   {% if paises %}
     <div class="grid">
       {% for pais in paises %}
-        <article class="card">
-          <h2><a href="{{ pais.url }}">{{ pais.title }}</a></h2>
-          {% if pais.descripcion_corta %}<p>{{ pais.descripcion_corta }}</p>{% endif %}
+        <article class="card card-country">
+
+          <a class="card-link" href="{{ pais.url }}" aria-label="Ver destinos en {{ pais.title }}">
+            {% if pais.hero_image %}
+              {% image pais.hero_image fill-800x450 class="card-img" %}
+            {% else %}
+              <div class="card-img card-img--placeholder"></div>
+            {% endif %}
+
+            <div class="card-body">
+              <h2 class="card-title">{{ pais.title }}</h2>
+              {% if pais.descripcion_corta %}<p class="card-text">{{ pais.descripcion_corta }}</p>{% endif %}
+            </div>
+          </a>
+
         </article>
       {% endfor %}
     </div>
