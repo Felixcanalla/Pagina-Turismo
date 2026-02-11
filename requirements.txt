@@ -1,5 +1,5 @@
-Django>=5.0,<6.0
-wagtail>=6.0,<7.0
+Django>=5.2.11
+wagtail>=6.5
 django-taggit>=5.0
 django-modelcluster>=6.0
 Pillow>=10.0
