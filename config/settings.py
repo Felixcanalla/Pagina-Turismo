@@ -77,6 +77,7 @@ SITE_ID = 1
 
 WAGTAIL_SITE_NAME = "Turismo"
 
+WAGTAILADMIN_BASE_URL = os.environ.get("WAGTAILADMIN_BASE_URL")
 
 
 # -------------------------------------------------------------------
