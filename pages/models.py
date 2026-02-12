@@ -52,20 +52,20 @@ class HomePage(Page):
     def get_context(self, request):
         context = super().get_context(request)
 
+        DestinoPage = apps.get_model("pages", "DestinoPage")
+        ArticuloPage = apps.get_model("pages", "ArticuloPage")
+
         destinos_qs = DestinoPage.objects.live().public().order_by("-first_published_at")
-        if hasattr(DestinoPage, "destacado"):
+        if "destacado" in [f.name for f in DestinoPage._meta.get_fields()]:
             destinos_qs = destinos_qs.filter(destacado=True).order_by("-first_published_at")
         context["destinos"] = destinos_qs[:6]
 
         articulos_qs = ArticuloPage.objects.live().public().order_by("-first_published_at")
-        if hasattr(ArticuloPage, "destacado"):
+        if "destacado" in [f.name for f in ArticuloPage._meta.get_fields()]:
             articulos_qs = articulos_qs.filter(destacado=True).order_by("-first_published_at")
         context["articulos"] = articulos_qs[:6]
 
         return context
-
-    class Meta:
-        verbose_name = "Home"
 
 
 class SimplePage(Page):
