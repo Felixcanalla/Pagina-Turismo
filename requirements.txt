@@ -1,5 +1,5 @@
 Django==5.2.11
-wagtail==6.4.2
+wagtail==7.3
 
 gunicorn==25.0.3
 whitenoise==6.11.0
