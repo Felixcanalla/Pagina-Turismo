@@ -14,6 +14,7 @@ from wagtail import blocks
 from wagtail.admin.panels import FieldPanel, MultiFieldPanel
 from wagtail.fields import RichTextField, StreamField
 from wagtail.models import Page
+from modelcluster.fields import ParentalManyToManyField 
 from wagtail.search import index
 from .blocks import FAQBlock
 from django.utils.html import strip_tags
@@ -506,6 +507,12 @@ class ArticuloPage(Page):
         related_name="+",
     )
 
+    destinos = ParentalManyToManyField(
+        "pages.DestinoPage",
+        blank=True,
+        related_name="guias",
+    )
+
     body = StreamField(
         [
             ("section_title", SectionTitleBlock()),
@@ -524,6 +531,7 @@ class ArticuloPage(Page):
         FieldPanel("intro"),
         FieldPanel("cover_image"),
         FieldPanel("body"),
+        FieldPanel("destinos"),
     ]
 
     promote_panels = Page.promote_panels + [

@@ -52,4 +52,16 @@
     </div>
 
   </article>
+
+  {% with guias=page.guias.live.public %}
+  {% if guias %}
+    <h3>Guías relacionadas</h3>
+    <ul>
+      {% for g in guias %}
+        <li><a href="{{ g.url }}">{{ g.title }}</a></li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
+
 {% endblock %}

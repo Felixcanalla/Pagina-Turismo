@@ -143,6 +143,14 @@
           {% endfor %}
         </div>
       </section>
+      {% if page.destinos.all %}
+  <h3>Destinos relacionados</h3>
+  <ul>
+    {% for d in page.destinos.all %}
+      <li><a href="{{ d.url }}">{{ d.title }}</a></li>
+    {% endfor %}
+  </ul>
+{% endif %}
     {% endif %}
 
 
