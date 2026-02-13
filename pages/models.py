@@ -11,7 +11,7 @@ from modelcluster.tags import ClusterTaggableManager
 from taggit.models import TaggedItemBase
 
 from wagtail import blocks
-from wagtail.admin.panels import FieldPanel, MultiFieldPanel
+from wagtail.admin.panels import FieldPanel, MultiFieldPanel,PageChooserPanel,InlinePanel
 from wagtail.fields import RichTextField, StreamField
 from wagtail.models import Page
 from modelcluster.fields import ParentalManyToManyField 
@@ -507,11 +507,7 @@ class ArticuloPage(Page):
         related_name="+",
     )
 
-    destinos = ParentalManyToManyField(
-        "pages.DestinoPage",
-        blank=True,
-        related_name="guias",
-    )
+    
 
     body = StreamField(
         [
@@ -531,7 +527,7 @@ class ArticuloPage(Page):
         FieldPanel("intro"),
         FieldPanel("cover_image"),
         FieldPanel("body"),
-        FieldPanel("destinos"),
+        InlinePanel("destinos_relacionados", label="Destinos relacionados"),
     ]
 
     promote_panels = Page.promote_panels + [
@@ -593,5 +589,33 @@ class ArticuloPage(Page):
         context["breadcrumb_ancestors"] = [
             a.specific for a in self.get_ancestors().live().public()
             if a.depth >= 4
+
+        # dentro de DestinoPage.get_context
+        context["guias_relacionadas"] = (
+            ArticuloPage.objects.live().public()
+            .filter(destinos_relacionados__destino=self)
+            .distinct()
+            .order_by("-first_published_at")
+)
+
         ]
         return context
+
+
+
+
+class ArticuloDestinoRelation(Orderable):
+    articulo = ParentalKey(
+        "pages.ArticuloPage",
+        on_delete=models.CASCADE,
+        related_name="destinos_relacionados",
+    )
+    destino = models.ForeignKey(
+        "pages.DestinoPage",
+        on_delete=models.CASCADE,
+        related_name="articulos_relacionados",
+    )
+
+    panels = [
+        PageChooserPanel("destino", "pages.DestinoPage"),
+    ]

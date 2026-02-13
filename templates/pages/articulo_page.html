@@ -4,64 +4,60 @@
 {% block extra_head %}
   {% include "partials/jsonld_breadcrumbs.html" %}
   {% include "partials/jsonld_article.html" %}
-    {% include "partials/jsonld_faq.html" %}
-
+  {% include "partials/jsonld_faq.html" %}
 {% endblock %}
 
 {% block content %}
-  <article class="container">
+<article class="container">
 
-    <header class="hero hero--stack">
-      <div class="hero-stack">
+  <header class="hero hero--stack">
+    <div class="hero-stack">
 
-        <nav class="breadcrumbs" aria-label="Breadcrumb">
-          <ol>
-            <li><a href="/">Inicio</a></li>
-
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <ol>
+          <li><a href="/">Inicio</a></li>
           {% for ancestor in breadcrumb_ancestors %}
-  <li><a href="{{ ancestor.url }}">{{ ancestor.title }}</a></li>
-{% endfor %}
-
-
-            <li aria-current="page">{{ page.title }}</li>
-          </ol>
-        </nav>
-
-        <h1>{{ page.title }}</h1>
-        {% if page.intro %}<p class="muted">{{ page.intro }}</p>{% endif %}
-      </div>
-
-      {% if page.cover_image %}
-        {% image page.cover_image fill-1600x700 class="hero-img" %}
-      {% endif %}
-    </header>
-
-    {% if toc %}
-      <nav class="toc">
-        <h3>Contenido</h3>
-        <ul>
-          {% for item in toc %}
-            <li><a href="#{{ item.anchor }}">{{ item.title }}</a></li>
+            <li><a href="{{ ancestor.url }}">{{ ancestor.title }}</a></li>
           {% endfor %}
-        </ul>
+          <li aria-current="page">{{ page.title }}</li>
+        </ol>
       </nav>
-    {% endif %}
 
-    <div class="content post__body">
-      {{ body_html|safe }}
+      <h1>{{ page.title }}</h1>
+      {% if page.intro %}<p class="muted">{{ page.intro }}</p>{% endif %}
     </div>
 
-  </article>
+    {% if page.cover_image %}
+      {% image page.cover_image fill-1600x700 class="hero-img" %}
+    {% endif %}
+  </header>
 
-  {% with guias=page.guias.live.public %}
-  {% if guias %}
-    <h3>Guías relacionadas</h3>
-    <ul>
-      {% for g in guias %}
-        <li><a href="{{ g.url }}">{{ g.title }}</a></li>
-      {% endfor %}
-    </ul>
+  {% if toc %}
+    <nav class="toc">
+      <h3>Contenido</h3>
+      <ul>
+        {% for item in toc %}
+          <li><a href="#{{ item.anchor }}">{{ item.title }}</a></li>
+        {% endfor %}
+      </ul>
+    </nav>
   {% endif %}
-{% endwith %}
 
+  <div class="content post__body">
+    {{ body_html|safe }}
+  </div>
+
+  {# ✅ Destinos relacionados (Orderable) #}
+  {% if page.destinos_relacionados.all %}
+    <section class="related">
+      <h2>Destinos relacionados</h2>
+      <ul>
+        {% for rel in page.destinos_relacionados.all %}
+          <li><a href="{{ rel.destino.url }}">{{ rel.destino.title }}</a></li>
+        {% endfor %}
+      </ul>
+    </section>
+  {% endif %}
+
+</article>
 {% endblock %}
