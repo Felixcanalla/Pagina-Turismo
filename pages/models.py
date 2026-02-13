@@ -13,7 +13,7 @@ from taggit.models import TaggedItemBase
 from wagtail import blocks
 from wagtail.admin.panels import FieldPanel, MultiFieldPanel,PageChooserPanel,InlinePanel
 from wagtail.fields import RichTextField, StreamField
-from wagtail.models import Page
+from wagtail.models import Page, Orderable
 from modelcluster.fields import ParentalManyToManyField 
 from wagtail.search import index
 from .blocks import FAQBlock
@@ -493,6 +493,7 @@ class DestinoPage(Page):
 # ARTÍCULO / GUÍA (con TOC)
 # =========================
 
+
 class ArticuloPage(Page):
     template = "pages/articulo_page.html"
     seo_description = models.CharField(max_length=160, blank=True)
@@ -506,8 +507,6 @@ class ArticuloPage(Page):
         on_delete=models.SET_NULL,
         related_name="+",
     )
-
-    
 
     body = StreamField(
         [
@@ -565,15 +564,19 @@ class ArticuloPage(Page):
 
                 subtitle = (block.value.get("subtitle") or "").strip()
                 if subtitle:
-                    parts.append(format_html(
-                        '<section class="block block-title"><h2 id="{}">{}</h2><p class="muted">{}</p></section>',
-                        anchor, title, subtitle
-                    ))
+                    parts.append(
+                        format_html(
+                            '<section class="block block-title"><h2 id="{}">{}</h2><p class="muted">{}</p></section>',
+                            anchor, title, subtitle
+                        )
+                    )
                 else:
-                    parts.append(format_html(
-                        '<section class="block block-title"><h2 id="{}">{}</h2></section>',
-                        anchor, title
-                    ))
+                    parts.append(
+                        format_html(
+                            '<section class="block block-title"><h2 id="{}">{}</h2></section>',
+                            anchor, title
+                        )
+                    )
             else:
                 parts.append(mark_safe(block.render()))
 
@@ -589,17 +592,10 @@ class ArticuloPage(Page):
         context["breadcrumb_ancestors"] = [
             a.specific for a in self.get_ancestors().live().public()
             if a.depth >= 4
-
-        # dentro de DestinoPage.get_context
-        context["guias_relacionadas"] = (
-            ArticuloPage.objects.live().public()
-            .filter(destinos_relacionados__destino=self)
-            .distinct()
-            .order_by("-first_published_at")
-)
-
         ]
+
         return context
+
 
 
 
