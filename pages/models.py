@@ -615,3 +615,12 @@ class ArticuloDestinoRelation(Orderable):
     panels = [
         PageChooserPanel("destino", "pages.DestinoPage"),
     ]
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["articulo", "destino"],
+                name="unique_articulo_destino_relation",
+            )
+        ]
+
