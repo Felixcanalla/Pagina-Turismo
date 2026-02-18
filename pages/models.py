@@ -261,6 +261,75 @@ class DestinoPageTag(TaggedItemBase):
     )
 
 
+
+
+
+def build_toc_and_body_html(stream):
+    used = {}
+    toc = []
+    parts = []
+
+    def unique_anchor(title: str) -> str:
+        base = slugify(title) or "seccion"
+        used[base] = used.get(base, 0) + 1
+        return base if used[base] == 1 else f"{base}-{used[base]}"
+
+    def add_heading(title: str, subtitle: str = ""):
+        anchor = unique_anchor(title)
+        toc.append({"title": title, "anchor": anchor, "level": 2})
+
+        if subtitle:
+            parts.append(format_html(
+                '<section class="block block-title"><h2 id="{}">{}</h2><p class="muted">{}</p></section>',
+                anchor, title, subtitle
+            ))
+        else:
+            parts.append(format_html(
+                '<section class="block block-title"><h2 id="{}">{}</h2></section>',
+                anchor, title
+            ))
+
+    for block in stream:
+        if block.block_type == "section_title":
+            title = (block.value.get("title") or "").strip()
+            if not title:
+                continue
+            subtitle = (block.value.get("subtitle") or "").strip()
+            add_heading(title, subtitle)
+
+        elif block.block_type == "quick_section":
+            title = (block.value.get("title") or "").strip()
+            if title:
+                subtitle = (block.value.get("subtitle") or "").strip()
+                add_heading(title, subtitle)
+                parts.append(format_html(
+                    '<div class="qs__rendered qs__rendered--no-title">{}</div>',
+                    mark_safe(block.render())
+                ))
+            else:
+                parts.append(mark_safe(block.render()))
+
+        elif block.block_type == "quick_sections":
+            sections = block.value.get("sections") or []
+            for s in sections:
+                title = (s.get("title") or "").strip()
+                if not title:
+                    continue
+                subtitle = (s.get("subtitle") or "").strip()
+                add_heading(title, subtitle)
+                parts.append(format_html(
+                    '<div class="qs__rendered qs__rendered--no-title">{}</div>',
+                    mark_safe(s.render())
+                ))
+
+        else:
+            parts.append(mark_safe(block.render()))
+
+    return toc, mark_safe("".join(parts))
+
+    
+
+
 class DestinoPage(Page):
     template = "pages/destino_page.html"
     seo_description = models.CharField(max_length=160, blank=True)
@@ -279,6 +348,8 @@ class DestinoPage(Page):
 
     body = StreamField(
         [
+            ("quick_sections", QuickSectionsBlock()),
+            ("quick_section", QuickSectionBlock()),
             ("section_title", SectionTitleBlock()),
             ("rich_text", blocks.RichTextBlock(features=["h2", "h3", "bold", "italic", "ol", "ul", "link"])),
             ("image", ImageBlock()),
@@ -428,63 +499,68 @@ class DestinoPage(Page):
         context["related_destinos"] = related_list
 
         # ✅ CTAs: manual override > automático por tags
+        # ✅ CTAs: manual override > automático por tags
         if self.cta_manual and len(self.cta_manual):
             context["ctas"] = self.cta_manual
             context["ctas_source"] = "manual"
-            return context
+        else:
+            tag_names = set(t.name.lower() for t in self.tags.all())
+            ctas_auto = []
 
-        tag_names = set(t.name.lower() for t in self.tags.all())
-        ctas_auto = []
+            def add_cta(title, url, button_text="Ver opciones", note=""):
+                ctas_auto.append({
+                    "title": title,
+                    "url": url,
+                    "button_text": button_text,
+                    "note": note,
+                })
 
-        def add_cta(title, url, button_text="Ver opciones", note=""):
-            ctas_auto.append({
-                "title": title,
-                "url": url,
-                "button_text": button_text,
-                "note": note,
-            })
+            # Reglas combinables
+            if "playa" in tag_names:
+                add_cta("Alojamientos cerca de la playa", "https://www.booking.com/", "Ver alojamientos", "Compará precios y disponibilidad")
+                add_cta("Snorkel y paseos en barco", "https://www.getyourguide.com/", "Ver actividades", "Experiencias típicas de playa")
 
-        # Reglas combinables
-        if "playa" in tag_names:
-            add_cta("Alojamientos cerca de la playa", "https://www.booking.com/", "Ver alojamientos", "Compará precios y disponibilidad")
-            add_cta("Snorkel y paseos en barco", "https://www.getyourguide.com/", "Ver actividades", "Experiencias típicas de playa")
+            if "montaña" in tag_names or "trekking" in tag_names:
+                add_cta("Excursiones y trekking guiado", "https://www.getyourguide.com/", "Ver excursiones", "Opciones según dificultad y tiempo")
+                add_cta("Seguro de viaje", "https://www.assistcard.com/", "Cotizar seguro", "Recomendado para actividades al aire libre")
 
-        if "montaña" in tag_names or "trekking" in tag_names:
-            add_cta("Excursiones y trekking guiado", "https://www.getyourguide.com/", "Ver excursiones", "Opciones según dificultad y tiempo")
-            add_cta("Seguro de viaje", "https://www.assistcard.com/", "Cotizar seguro", "Recomendado para actividades al aire libre")
+            if "ciudad" in tag_names:
+                add_cta("Tours y experiencias en la ciudad", "https://www.getyourguide.com/", "Ver tours", "Walking tours, museos y gastronomía")
+                add_cta("Alojamiento bien ubicado", "https://www.booking.com/", "Buscar hotel", "Mejor ubicación = menos traslados")
 
-        if "ciudad" in tag_names:
-            add_cta("Tours y experiencias en la ciudad", "https://www.getyourguide.com/", "Ver tours", "Walking tours, museos y gastronomía")
-            add_cta("Alojamiento bien ubicado", "https://www.booking.com/", "Buscar hotel", "Mejor ubicación = menos traslados")
+            if "familia" in tag_names:
+                add_cta("Alojamientos ideales para familias", "https://www.booking.com/", "Ver opciones", "Filtrá por cocina, pileta y espacio")
 
-        if "familia" in tag_names:
-            add_cta("Alojamientos ideales para familias", "https://www.booking.com/", "Ver opciones", "Filtrá por cocina, pileta y espacio")
+            if "pareja" in tag_names:
+                add_cta("Experiencias para parejas", "https://www.getyourguide.com/", "Ver experiencias", "Atardeceres, paseos y actividades románticas")
 
-        if "pareja" in tag_names:
-            add_cta("Experiencias para parejas", "https://www.getyourguide.com/", "Ver experiencias", "Atardeceres, paseos y actividades románticas")
+            if "presupuesto" in tag_names or "barato" in tag_names:
+                add_cta("Opciones económicas", "https://www.booking.com/", "Ver ofertas", "Ordená por precio y mirá reviews")
 
-        if "presupuesto" in tag_names or "barato" in tag_names:
-            add_cta("Opciones económicas", "https://www.booking.com/", "Ver ofertas", "Ordená por precio y mirá reviews")
+            # Dedup
+            seen = set()
+            unique_ctas = []
+            for cta in ctas_auto:
+                key = (cta["url"], cta["button_text"])
+                if key in seen:
+                    continue
+                seen.add(key)
+                unique_ctas.append(cta)
 
-        # Dedup
-        seen = set()
-        unique_ctas = []
-        for cta in ctas_auto:
-            key = (cta["url"], cta["button_text"])
-            if key in seen:
-                continue
-            seen.add(key)
-            unique_ctas.append(cta)
+            # Fallback general
+            if not unique_ctas:
+                unique_ctas = [
+                    {"title": "Buscar alojamientos", "url": "https://www.booking.com/", "button_text": "Ver alojamientos", "note": "Compará opciones"},
+                    {"title": "Seguro de viaje", "url": "https://www.assistcard.com/", "button_text": "Cotizar seguro", "note": ""},
+                ]
 
-        # Fallback general
-        if not unique_ctas:
-            unique_ctas = [
-                {"title": "Buscar alojamientos", "url": "https://www.booking.com/", "button_text": "Ver alojamientos", "note": "Compará opciones"},
-                {"title": "Seguro de viaje", "url": "https://www.assistcard.com/", "button_text": "Cotizar seguro", "note": ""},
-            ]
+            context["ctas"] = unique_ctas[:3]
+            context["ctas_source"] = "auto"
 
-        context["ctas"] = unique_ctas[:3]
-        context["ctas_source"] = "auto"
+        toc, body_html = build_toc_and_body_html(self.body)
+        context["toc"] = toc
+        context["body_html"] = body_html
+
         return context
 
     class Meta:

@@ -1363,3 +1363,20 @@ html { scroll-behavior: smooth; }
 .qs__rendered--no-title .qs__header{
   display: none;
 }
+
+
+.qs__rendered--no-title .qs__header{
+  display:none;
+}
+
+
+html { scroll-behavior: smooth; }
+
+.toc__link.is-active{
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.post__body h2[id]{
+  scroll-margin-top: 110px; /* ajustá según tu header */
+}

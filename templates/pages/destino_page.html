@@ -43,7 +43,22 @@
 
   <div class="content post-shell">
     {% if page.body %}
-      {% include_block page.body %}
+<div class="post__content">
+  {% if toc %}
+  <nav class="toc" id="toc">
+      <h3 class="toc__title">Contenido</h3>
+      <ul class="toc__list">
+        {% for item in toc %}
+          <li class="toc__item"><a class="toc__link" href="#{{ item.anchor }}">{{ item.title }}</a></li>
+        {% endfor %}
+      </ul>
+    </nav>
+  {% endif %}
+
+  <div class="content post__body">
+    {{ body_html|safe }}
+  </div>
+</div>
     {% endif %}
 
     {% if ctas %}
