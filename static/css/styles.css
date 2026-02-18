@@ -1357,3 +1357,9 @@ html { scroll-behavior: smooth; }
     gap: 4px;
   }
 }
+
+
+.qs__rendered--no-title .qs__title,
+.qs__rendered--no-title .qs__header{
+  display: none;
+}

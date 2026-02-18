@@ -19,10 +19,12 @@ from wagtail.search import index
 from .blocks import FAQBlock
 from django.utils.html import strip_tags
 import json
+from .blocks import QuickSectionBlock, QuickSectionsBlock
 
 from django.utils.html import strip_tags
 from django.utils.safestring import mark_safe
 from wagtail.rich_text import RichText
+
 
 
 
@@ -517,6 +519,9 @@ class ArticuloPage(Page):
             ("highlights", HighlightsBlock()),
             ("youtube", YouTubeBlock()),
             ("cta", CTAButtonBlock()),
+            ("quick_sections", QuickSectionsBlock()),
+            ("quick_section", QuickSectionBlock()),
+
         ],
         use_json_field=True,
         blank=True,
@@ -545,42 +550,96 @@ class ArticuloPage(Page):
         verbose_name = "Artículo"
 
     # --- TOC (Tabla de contenidos) basado en bloques section_title ---
-    def _build_toc_and_body_html(self):
-        used = {}
-        toc = []
-        parts = []
+    from django.utils.text import slugify
+from django.utils.html import format_html
+from django.utils.safestring import mark_safe
 
-        for block in self.body:
-            if block.block_type == "section_title":
-                title = (block.value.get("title") or "").strip()
-                if not title:
-                    continue
+def _build_toc_and_body_html(self):
+    used = {}
+    toc = []
+    parts = []
 
-                base = slugify(title) or "seccion"
-                used[base] = used.get(base, 0) + 1
-                anchor = base if used[base] == 1 else f"{base}-{used[base]}"
+    def unique_anchor(title: str) -> str:
+        base = slugify(title) or "seccion"
+        used[base] = used.get(base, 0) + 1
+        return base if used[base] == 1 else f"{base}-{used[base]}"
 
-                toc.append({"title": title, "anchor": anchor, "level": 2})
+    def render_heading(title, subtitle=""):
+        anchor = unique_anchor(title)
+        toc.append({"title": title, "anchor": anchor, "level": 2})
 
+        if subtitle:
+            parts.append(format_html(
+                '<section class="block block-title"><h2 id="{}">{}</h2><p class="muted">{}</p></section>',
+                anchor, title, subtitle
+            ))
+        else:
+            parts.append(format_html(
+                '<section class="block block-title"><h2 id="{}">{}</h2></section>',
+                anchor, title
+            ))
+        return anchor
+
+    for block in self.body:
+        if block.block_type == "section_title":
+            title = (block.value.get("title") or "").strip()
+            if not title:
+                continue
+            subtitle = (block.value.get("subtitle") or "").strip()
+            render_heading(title, subtitle)
+
+        elif block.block_type == "quick_section":
+            title = (block.value.get("title") or "").strip()
+            if title:
                 subtitle = (block.value.get("subtitle") or "").strip()
-                if subtitle:
-                    parts.append(
-                        format_html(
-                            '<section class="block block-title"><h2 id="{}">{}</h2><p class="muted">{}</p></section>',
-                            anchor, title, subtitle
-                        )
-                    )
-                else:
-                    parts.append(
-                        format_html(
-                            '<section class="block block-title"><h2 id="{}">{}</h2></section>',
-                            anchor, title
-                        )
-                    )
+                anchor = render_heading(title, subtitle)
+
+                # Render cuerpo + media del bloque (sin duplicar el h2)
+                body = block.value.get("body")
+                image = block.value.get("image")
+                caption = (block.value.get("caption") or "").strip()
+                cta_text = (block.value.get("cta_text") or "").strip()
+                cta_url = (block.value.get("cta_url") or "").strip()
+                cta_note = (block.value.get("cta_note") or "").strip()
+
+                if body:
+                    parts.append(format_html('<div class="qs__body">{}</div>', mark_safe(body)))
+                if image:
+                    # render del bloque original para imagen/cta (más simple)
+                    # pero sin repetir h2: lo manejamos arriba
+                    pass
+
+                # Para no complicar, renderizamos el bloque completo pero ocultamos su h2 via CSS
+                parts.append(format_html(
+                    '<div class="qs__rendered qs__rendered--no-title">{}</div>',
+                    mark_safe(block.render())
+                ))
+
             else:
                 parts.append(mark_safe(block.render()))
 
-        return toc, mark_safe("".join(parts))
+        elif block.block_type == "quick_sections":
+            # Contenedor con muchas secciones
+            sections = block.value.get("sections") or []
+            for s in sections:
+                title = (s.get("title") or "").strip()
+                if not title:
+                    continue
+                subtitle = (s.get("subtitle") or "").strip()
+                render_heading(title, subtitle)
+
+                # Renderizamos la sección completa pero sin título
+                # (el título ya lo renderizamos con id/anchor)
+                parts.append(format_html(
+                    '<div class="qs__rendered qs__rendered--no-title">{}</div>',
+                    mark_safe(s.render())
+                ))
+
+        else:
+            parts.append(mark_safe(block.render()))
+
+    return toc, mark_safe("".join(parts))
+
 
     def get_context(self, request):
         context = super().get_context(request)

@@ -1,0 +1,9 @@
+<section class="qs-stack">
+  {% if value.title %}
+    <h2>{{ value.title }}</h2>
+  {% endif %}
+
+  {% for s in value.sections %}
+    {% include_block s %}
+  {% endfor %}
+</section>

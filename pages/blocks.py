@@ -3,6 +3,10 @@ from wagtail.embeds.blocks import EmbedBlock
 from wagtail.images.blocks import ImageChooserBlock
 
 
+
+
+
+
 class SectionTitleBlock(blocks.StructBlock):
     title = blocks.CharBlock(required=True, max_length=80)
     subtitle = blocks.CharBlock(required=False, max_length=140)
@@ -113,3 +117,48 @@ class FAQBlock(blocks.StructBlock):
     class Meta:
         icon = "help"
         label = "FAQ"
+
+
+
+class QuickSectionBlock(blocks.StructBlock):
+    """
+    Sección completa para redactar rápido:
+    - título/subtítulo (sirve para TOC)
+    - texto (cuerpo)
+    - imagen opcional + caption
+    - CTA opcional
+    """
+    title = blocks.CharBlock(required=True, max_length=80, label="Título")
+    subtitle = blocks.CharBlock(required=False, max_length=140, label="Subtítulo (opcional)")
+
+    body = blocks.RichTextBlock(
+        required=False,
+        label="Contenido",
+        features=["bold", "italic", "link", "ul", "ol"],
+        help_text="Escribí el contenido de la sección. Evitá usar H2/H3 aquí: el título ya se renderiza arriba."
+    )
+
+    image = ImageChooserBlock(required=False, label="Imagen (opcional)")
+    caption = blocks.CharBlock(required=False, max_length=180, label="Pie de imagen (opcional)")
+
+    cta_text = blocks.CharBlock(required=False, max_length=40, label="Texto del botón (opcional)")
+    cta_url = blocks.URLBlock(required=False, label="URL del botón (opcional)")
+    cta_note = blocks.CharBlock(required=False, max_length=120, label="Nota (opcional)")
+
+    class Meta:
+        icon = "form"
+        label = "Sección (rápida)"
+        template = "blocks/quick_section.html"
+
+
+class QuickSectionsBlock(blocks.StructBlock):
+    """
+    Contenedor para repetir muchas secciones sin agregar bloque por bloque.
+    """
+    title = blocks.CharBlock(required=False, max_length=80, label="Título del bloque (opcional)")
+    sections = blocks.ListBlock(QuickSectionBlock(), min_num=1, label="Secciones")
+
+    class Meta:
+        icon = "list-ul"
+        label = "Secciones (rápidas)"
+        template = "blocks/quick_sections.html"

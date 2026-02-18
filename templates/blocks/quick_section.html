@@ -1,0 +1,36 @@
+{% load wagtailimages_tags wagtailcore_tags %}
+
+<section class="qs">
+  {% comment %}
+    El anchor/id se setea desde el método de TOC (cuando usamos body_html).
+    Si la sección se renderiza con include_block directo, igual se ve bien.
+  {% endcomment %}
+
+  <header class="qs__header">
+    <h2 class="qs__title">{{ value.title }}</h2>
+    {% if value.subtitle %}
+      <p class="qs__subtitle muted">{{ value.subtitle }}</p>
+    {% endif %}
+  </header>
+
+  {% if value.body %}
+    <div class="qs__body">
+      {{ value.body|richtext }}
+    </div>
+  {% endif %}
+
+  {% if value.image %}
+    <figure class="qs__figure">
+      {% image value.image fill-1200x650 class="qs__img" %}
+      {% if value.caption %}
+        <figcaption class="qs__caption muted">{{ value.caption }}</figcaption>
+      {% endif %}
+    </figure>
+  {% endif %}
+
+  {% if value.cta_text and value.cta_url %}
+    <div class="qs__cta">
+      {% include "partials/cta_button.html" with url=value.cta_url text=value.cta_text note=value.cta_note %}
+    </div>
+  {% endif %}
+</section>
