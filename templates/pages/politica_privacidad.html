@@ -1,45 +1,63 @@
 {% extends "layout/base.html" %}
 {% load wagtailcore_tags %}
 
-
 {% block title %}
 Política de privacidad | {{ site_name|default:"Turismo" }}
 {% endblock %}
 
 {% block meta_description %}
-Política de privacidad del sitio: uso de cookies, analítica y protección de datos personales.
+Conocé cómo tratamos tus datos y qué información se recopila cuando navegás por el sitio.
 {% endblock %}
 
 {% block og_type %}website{% endblock %}
-
-{% block og_title %}
-Política de privacidad
-{% endblock %}
-
+{% block og_title %}Política de privacidad{% endblock %}
 {% block og_description %}
-Este sitio utiliza cookies y herramientas de analítica para mejorar la experiencia. No vendemos ni compartimos tus datos personales.
+Conocé cómo tratamos tus datos y qué información se recopila cuando navegás por el sitio.
 {% endblock %}
 
-{% block twitter_title %}
-Política de privacidad
-{% endblock %}
-
+{% block twitter_title %}Política de privacidad{% endblock %}
 {% block twitter_description %}
-Este sitio utiliza cookies y herramientas de analítica para mejorar la experiencia. No vendemos ni compartimos tus datos personales.
+Conocé cómo tratamos tus datos y qué información se recopila cuando navegás por el sitio.
 {% endblock %}
 
 {% block content %}
+<article class="container page">
+  <header class="page-header">
+    <h1>Política de privacidad</h1>
+    <p class="muted">
+      Última actualización: {{ "now"|date:"F Y" }}
+    </p>
+  </header>
 
-<h1>Política de privacidad</h1>
+  <section class="page-section">
+    <h2>Información que recopilamos</h2>
+    <p>
+      Podemos recopilar información de forma limitada para mejorar el sitio, como estadísticas de navegación
+      (páginas visitadas, tiempo de permanencia, dispositivo/navegador) mediante herramientas de analítica.
+    </p>
+  </section>
 
-<p>
-  Este sitio puede usar cookies y herramientas de analítica para mejorar la experiencia.
-  No vendemos tus datos personales ni los compartimos con terceros.
-</p>
+  <section class="page-section">
+    <h2>Cookies</h2>
+    <p>
+      Podemos utilizar cookies para recordar preferencias y medir el rendimiento del sitio.
+      Podés desactivar cookies desde la configuración de tu navegador.
+    </p>
+  </section>
 
-<p>
-  Si querés contactarnos por temas de privacidad:
-  <strong>tu-email@dominio.com</strong>
-</p>
+  <section class="page-section">
+    <h2>Enlaces a terceros</h2>
+    <p>
+      Este sitio puede contener enlaces a servicios de terceros (por ejemplo, plataformas de alojamiento o actividades).
+      Las políticas de esos sitios se rigen por sus propios términos y privacidad.
+    </p>
+  </section>
 
+  <section class="page-section">
+    <h2>Contacto</h2>
+    <p>
+      Si tenés preguntas sobre esta política, escribinos a: <strong>contacto@pagina-turismo.com</strong>
+    </p>
+  </section>
+</article>
 {% endblock %}

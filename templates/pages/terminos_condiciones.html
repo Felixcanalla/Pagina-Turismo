@@ -1,20 +1,71 @@
 {% extends "layout/base.html" %}
 {% load wagtailcore_tags %}
 
-{% block title %}{{ page.title }} | {{ site_name|default:"Guía de Viajes" }}{% endblock %}
+{% block title %}
+Términos y condiciones | {{ site_name|default:"Turismo" }}
+{% endblock %}
+
+{% block meta_description %}
+Términos de uso del sitio: responsabilidades, contenido informativo y enlaces a terceros.
+{% endblock %}
+
+{% block og_type %}website{% endblock %}
+{% block og_title %}Términos y condiciones{% endblock %}
+{% block og_description %}
+Términos de uso del sitio: responsabilidades, contenido informativo y enlaces a terceros.
+{% endblock %}
+
+{% block twitter_title %}Términos y condiciones{% endblock %}
+{% block twitter_description %}
+Términos de uso del sitio: responsabilidades, contenido informativo y enlaces a terceros.
+{% endblock %}
 
 {% block content %}
-<section class="section article">
-  <h1>{{ page.title }}</h1>
+<article class="container page">
+  <header class="page-header">
+    <h1>Términos y condiciones</h1>
+    <p class="muted">
+      Última actualización: {{ "now"|date:"F Y" }}
+    </p>
+  </header>
 
-  <p class="muted">
-    Última actualización: {{ page.last_published_at|date:"d/m/Y" }}
-  </p>
+  <section class="page-section">
+    <h2>Uso del sitio</h2>
+    <p>
+      El contenido publicado es informativo y puede cambiar con el tiempo (precios, horarios, requisitos, disponibilidad).
+      Recomendamos verificar siempre con fuentes oficiales y prestadores antes de reservar o viajar.
+    </p>
+  </section>
 
-  {% if page.body %}
-    <div class="prose">
-      {% include_block page.body %}
-    </div>
-  {% endif %}
-</section>
+  <section class="page-section">
+    <h2>Responsabilidad</h2>
+    <p>
+      {{ site_name|default:"Turismo" }} no se responsabiliza por pérdidas, daños o inconvenientes derivados del uso de la información
+      o de servicios contratados con terceros. Cada usuario es responsable de sus decisiones de viaje.
+    </p>
+  </section>
+
+  <section class="page-section">
+    <h2>Enlaces a terceros y afiliados</h2>
+    <p>
+      Podemos enlazar a servicios externos (por ejemplo, alojamientos, actividades o seguros).
+      Algunos enlaces pueden ser de afiliados y generar una comisión sin costo adicional para el usuario.
+    </p>
+  </section>
+
+  <section class="page-section">
+    <h2>Propiedad intelectual</h2>
+    <p>
+      Los textos, estructura y contenidos del sitio no pueden reproducirse íntegramente sin autorización.
+      Se permite citar con enlace a la fuente.
+    </p>
+  </section>
+
+  <section class="page-section">
+    <h2>Contacto</h2>
+    <p>
+      Para consultas sobre estos términos: <strong>contacto@pagina-turismo.com</strong>
+    </p>
+  </section>
+</article>
 {% endblock %}

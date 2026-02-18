@@ -1,40 +1,80 @@
 {% extends "layout/base.html" %}
 {% load wagtailcore_tags %}
 
-
 {% block title %}
 Sobre nosotros | {{ site_name|default:"Turismo" }}
 {% endblock %}
 
 {% block meta_description %}
-Publicamos guías y consejos de viaje en español para ayudarte a planificar mejor cada viaje.
+Guías y consejos de viaje en español: contenido claro, práctico y actualizado para planificar mejor cada viaje.
 {% endblock %}
 
 {% block og_type %}website{% endblock %}
-
-{% block og_title %}
-Sobre nosotros
-{% endblock %}
-
+{% block og_title %}Sobre nosotros{% endblock %}
 {% block og_description %}
-Este sitio publica guías y consejos de viaje en español para ayudar a viajeros a planificar mejor.
+Guías y consejos de viaje en español: contenido claro, práctico y actualizado para planificar mejor cada viaje.
 {% endblock %}
 
-{% block twitter_title %}
-Sobre nosotros
-{% endblock %}
-
+{% block twitter_title %}Sobre nosotros{% endblock %}
 {% block twitter_description %}
-Este sitio publica guías y consejos de viaje en español para ayudar a viajeros a planificar mejor.
+Guías y consejos de viaje en español: contenido claro, práctico y actualizado para planificar mejor cada viaje.
 {% endblock %}
 
 {% block content %}
+<article class="container page">
+  <header class="page-header">
+    <h1>Sobre nosotros</h1>
+    <p class="muted">
+      En {{ site_name|default:"Turismo" }} creamos guías claras y prácticas para que planifiques tus viajes con confianza.
+    </p>
+  </header>
 
-<h1>Sobre nosotros</h1>
+  <section class="page-section">
+    <h2>Nuestra misión</h2>
+    <p>
+      Queremos ayudarte a organizar cada viaje de forma simple: qué hacer, dónde alojarte, cómo moverte y
+      qué tener en cuenta según temporada, presupuesto y estilo de viaje.
+    </p>
+  </section>
 
-<p>
-  Este sitio publica guías y consejos de viaje en español para ayudar a viajeros
-  a planificar mejor cada experiencia, con información clara y práctica.
-</p>
+  <section class="page-section">
+    <h2>Qué vas a encontrar</h2>
+    <ul>
+      <li>Guías completas por destino</li>
+      <li>Recomendaciones prácticas (clima, transporte, temporada)</li>
+      <li>Ideas de actividades y experiencias</li>
+      <li>Consejos para organizar tu presupuesto</li>
+    </ul>
+  </section>
 
+  <section class="page-section">
+    <h2>Cómo elaboramos nuestras guías</h2>
+    <p>
+      Nuestro contenido se basa en investigación editorial (fuentes oficiales cuando aplica), análisis de reseñas de viajeros,
+      comparación de alternativas y revisión periódica para mantenerlo útil y actualizado.
+    </p>
+  </section>
+
+  <section class="page-section">
+    <h2>Transparencia</h2>
+    <p>
+      Algunas recomendaciones pueden incluir enlaces de afiliados. Si realizás una reserva o compra a través de ellos,
+      podríamos recibir una comisión sin costo adicional para vos.
+      Esto ayuda a sostener el sitio y seguir creando contenido gratuito.
+    </p>
+    <p class="muted">
+      Las recomendaciones se eligen por utilidad para el viajero, no por comisiones.
+    </p>
+  </section>
+
+  <section class="page-section">
+    <h2>Contacto</h2>
+    <p>
+      ¿Querés sugerir un destino o corregir algo? Visitá nuestra página de contacto.
+    </p>
+    <p>
+      <a class="btn" href="/contacto/">Ir a Contacto</a>
+    </p>
+  </section>
+</article>
 {% endblock %}

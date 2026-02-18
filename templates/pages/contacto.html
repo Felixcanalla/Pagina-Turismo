@@ -1,40 +1,60 @@
 {% extends "layout/base.html" %}
 {% load wagtailcore_tags %}
 
-
 {% block title %}
 Contacto | {{ site_name|default:"Turismo" }}
 {% endblock %}
 
 {% block meta_description %}
-Contactanos para sugerencias, consultas o colaboraciones. Respondemos lo antes posible.
+Contactanos para sugerencias, consultas o colaboraciones. Respondemos dentro de 48 horas hábiles.
 {% endblock %}
 
 {% block og_type %}website{% endblock %}
 
-{% block og_title %}
-Contacto
-{% endblock %}
-
+{% block og_title %}Contacto{% endblock %}
 {% block og_description %}
-Contactanos para sugerencias, consultas o colaboraciones. Respondemos lo antes posible.
+Contactanos para sugerencias, consultas o colaboraciones. Respondemos dentro de 48 horas hábiles.
 {% endblock %}
 
-{% block twitter_title %}
-Contacto
-{% endblock %}
-
+{% block twitter_title %}Contacto{% endblock %}
 {% block twitter_description %}
-Contactanos para sugerencias, consultas o colaboraciones. Respondemos lo antes posible.
+Contactanos para sugerencias, consultas o colaboraciones. Respondemos dentro de 48 horas hábiles.
 {% endblock %}
 
 {% block content %}
+<article class="container page">
+  <header class="page-header">
+    <h1>Contacto</h1>
+    <p class="muted">
+      ¿Tenés una consulta, sugerencia o encontraste información desactualizada?
+      Escribinos y lo revisamos.
+    </p>
+  </header>
 
-<h1>Contacto</h1>
+  <section class="page-section">
+    <h2>Escribinos por email</h2>
+    <p>
+      📩 <strong>contacto@pagina-turismo.com</strong>
+      <br>
+      <span class="muted">Respondemos dentro de <strong>48 horas hábiles</strong>.</span>
+    </p>
+  </section>
 
-<p>
-  Escribinos a:
-  <strong>tu-email@dominio.com</strong>
-</p>
+  <section class="page-section">
+    <h2>Sugerencias y correcciones</h2>
+    <ul>
+      <li>Sugerencias de nuevos destinos o guías</li>
+      <li>Correcciones de datos (horarios, precios, accesos, etc.)</li>
+      <li>Recomendaciones para mejorar el sitio</li>
+    </ul>
+  </section>
 
+  <section class="page-section">
+    <h2>Colaboraciones y prensa</h2>
+    <p>
+      Si representás una marca, empresa u oficina de turismo, podés escribirnos con una propuesta.
+      Nuestro criterio editorial es independiente y prioriza la utilidad para el viajero.
+    </p>
+  </section>
+</article>
 {% endblock %}

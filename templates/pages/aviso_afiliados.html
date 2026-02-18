@@ -1,40 +1,61 @@
 {% extends "layout/base.html" %}
 {% load wagtailcore_tags %}
 
-
 {% block title %}
 Aviso de afiliados | {{ site_name|default:"Turismo" }}
 {% endblock %}
 
 {% block meta_description %}
-Este sitio participa en programas de afiliados. Algunos enlaces pueden generar una comisión sin costo adicional para vos.
+Participamos en programas de afiliados. Algunos enlaces pueden generar una comisión sin costo adicional para vos.
 {% endblock %}
 
 {% block og_type %}website{% endblock %}
-
-{% block og_title %}
-Aviso de afiliados
-{% endblock %}
-
+{% block og_title %}Aviso de afiliados{% endblock %}
 {% block og_description %}
-Este sitio participa en programas de afiliados. Algunos enlaces pueden generar una comisión sin costo adicional para vos.
+Participamos en programas de afiliados. Algunos enlaces pueden generar una comisión sin costo adicional para vos.
 {% endblock %}
 
-{% block twitter_title %}
-Aviso de afiliados
-{% endblock %}
-
+{% block twitter_title %}Aviso de afiliados{% endblock %}
 {% block twitter_description %}
-Este sitio participa en programas de afiliados. Algunos enlaces pueden generar una comisión sin costo adicional para vos.
+Participamos en programas de afiliados. Algunos enlaces pueden generar una comisión sin costo adicional para vos.
 {% endblock %}
 
 {% block content %}
+<article class="container page">
+  <header class="page-header">
+    <h1>Aviso de afiliados</h1>
+    <p class="muted">
+      Para mantener este sitio, usamos enlaces de afiliados en algunas recomendaciones.
+    </p>
+  </header>
 
-<h1>Aviso de afiliados</h1>
+  <section class="page-section">
+    <h2>¿Qué significa “enlace de afiliado”?</h2>
+    <p>
+      Algunos enlaces pueden generar una comisión si realizás una compra o reserva a través de ellos.
+      <strong>No tiene costo adicional</strong> para vos y el precio final no cambia.
+    </p>
+  </section>
 
-<p>
-  Este sitio participa en programas de afiliados. Algunos enlaces pueden generar
-  una comisión para el sitio, sin costo adicional para vos.
-</p>
+  <section class="page-section">
+    <h2>Qué recomendamos</h2>
+    <p>
+      Podemos enlazar a plataformas reconocidas para:
+    </p>
+    <ul>
+      <li>Alojamientos</li>
+      <li>Excursiones y actividades</li>
+      <li>Seguros de viaje</li>
+      <li>Servicios turísticos relacionados</li>
+    </ul>
+  </section>
 
+  <section class="page-section">
+    <h2>Compromiso editorial</h2>
+    <p>
+      Las recomendaciones se basan en criterios editoriales propios y en utilidad para el viajero.
+      Si una opción no es adecuada para cierto tipo de viaje, lo indicamos de forma clara.
+    </p>
+  </section>
+</article>
 {% endblock %}
