@@ -755,7 +755,7 @@ class ArticuloDestinoRelation(Orderable):
         constraints = [
             models.UniqueConstraint(
                 fields=["articulo", "destino"],
-                name="unique_articulo_destino_relation",
+                name="unique_articulo_destino_relation_v4",
             )
         ]
 
