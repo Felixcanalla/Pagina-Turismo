@@ -38,6 +38,6 @@ class Migration(migrations.Migration):
 
         migrations.AddConstraint(
             model_name='articulodestinorelation',
-            constraint=models.UniqueConstraint(fields=('articulo', 'destino'), name='unique_articulo_destino_relation'),
+            constraint=models.UniqueConstraint(fields=('articulo', 'destino'), name='unique_articulo_destino_relation_v2'),
         ),
     ]

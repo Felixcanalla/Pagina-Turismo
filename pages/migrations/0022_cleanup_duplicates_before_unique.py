@@ -11,7 +11,7 @@ class Migration(migrations.Migration):
             model_name='articulodestinorelation',
             constraint=models.UniqueConstraint(
                 fields=('articulo', 'destino'),
-                name='unique_articulo_destino_relation',
+                name='unique_articulo_destino_relation_v2',
             ),
         ),
     ]
