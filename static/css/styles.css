@@ -505,6 +505,12 @@ html { scroll-behavior: smooth; }
 
 
 
+.post__body h2[id],
+.post__body h3[id]{
+  scroll-margin-top: 110px;
+}
+
+
 
 
 
