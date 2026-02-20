@@ -1,16 +1,14 @@
 from django.contrib.sitemaps import Sitemap
 from wagtail.models import Page
 
-from pages.models import (
-    HomePage,
-    SimplePage,
-    GuiasIndexPage,
-    CategoriaPage,
-    ArticuloPage,
-    DestinosIndexPage,
-    PaisPage,
-    DestinoPage,
-)
+from pages.models import ArticuloPage, DestinoPage
+
+
+def _safe_url(obj):
+    """
+    Wagtail Page: obj.url puede ser None en algunos casos (no routable / sin site).
+    """
+    return obj.url or ""
 
 
 class WagtailPagesSitemap(Sitemap):
@@ -22,16 +20,18 @@ class WagtailPagesSitemap(Sitemap):
         return Page.objects.live().public()
 
     def location(self, obj):
-        return obj.url
+        return _safe_url(obj)
 
 
-# Si querés sitemaps separados por tipo (opcional)
 class ArticulosSitemap(Sitemap):
     changefreq = "weekly"
     priority = 0.7
 
     def items(self):
         return ArticuloPage.objects.live().public()
+
+    def location(self, obj):
+        return _safe_url(obj)
 
 
 class DestinosSitemap(Sitemap):
@@ -40,6 +40,9 @@ class DestinosSitemap(Sitemap):
 
     def items(self):
         return DestinoPage.objects.live().public()
+
+    def location(self, obj):
+        return _safe_url(obj)
 
 
 sitemaps = {

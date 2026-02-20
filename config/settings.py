@@ -66,6 +66,8 @@ INSTALLED_APPS = [
     "wagtail.documents",
     "wagtail.images",
     "wagtail.search",
+    'wagtail.contrib.sitemaps',
+
     "wagtail.admin",
     "wagtail",
 
