@@ -1,64 +1,93 @@
 {% load wagtailimages_tags static %}
 
-{% with base_url=request.scheme|add:'://'|add:request.get_host %}
+{% with abs_url=request.build_absolute_uri %}
+  {# =========================
+     TITLE
+     ========================= #}
   <title>{{ page.seo_title|default:page.title|default:"Guía de Viajes" }}</title>
 
-  {# Description #}
+  {# =========================
+     DESCRIPTION
+     ========================= #}
   {% if page.search_description %}
-    <meta name="description" content="{{ page.search_description|striptags|truncatechars:160 }}">
+    {% with desc=page.search_description|striptags|truncatechars:160 %}
+      <meta name="description" content="{{ desc }}">
+    {% endwith %}
   {% elif page.intro %}
-    <meta name="description" content="{{ page.intro|striptags|truncatechars:160 }}">
+    {% with desc=page.intro|striptags|truncatechars:160 %}
+      <meta name="description" content="{{ desc }}">
+    {% endwith %}
   {% else %}
     <meta name="description" content="Guías, destinos y consejos de viaje.">
   {% endif %}
 
-  {# Canonical #}
-  {% if page.full_url %}
-    <link rel="canonical" href="{{ page.full_url }}">
-  {% else %}
-    <link rel="canonical" href="{{ base_url }}{{ request.path }}">
-  {% endif %}
+  {# =========================
+     CANONICAL
+     ========================= #}
+  <link rel="canonical" href="{{ page.full_url|default:abs_url }}">
 
-  {# Open Graph #}
+  {# =========================
+     OPEN GRAPH
+     ========================= #}
   <meta property="og:site_name" content="Guía de Viajes">
   <meta property="og:title" content="{{ page.seo_title|default:page.title|default:'Guía de Viajes' }}">
+
   {% if page.search_description %}
-    <meta property="og:description" content="{{ page.search_description|striptags|truncatechars:200 }}">
+    {% with ogdesc=page.search_description|striptags|truncatechars:200 %}
+      <meta property="og:description" content="{{ ogdesc }}">
+    {% endwith %}
   {% elif page.intro %}
-    <meta property="og:description" content="{{ page.intro|striptags|truncatechars:200 }}">
+    {% with ogdesc=page.intro|striptags|truncatechars:200 %}
+      <meta property="og:description" content="{{ ogdesc }}">
+    {% endwith %}
   {% else %}
     <meta property="og:description" content="Guías, destinos y consejos de viaje.">
   {% endif %}
-  <meta property="og:url" content="{% if page.full_url %}{{ page.full_url }}{% else %}{{ base_url }}{{ request.path }}{% endif %}">
 
-  {# og:type (simple y seguro) #}
-  {% if page.cover_image or page.hero_image %}
+  <meta property="og:url" content="{{ page.full_url|default:abs_url }}">
+
+  {# og:type correcto #}
+  {% if page.__class__.__name__ == "ArticuloPage" %}
     <meta property="og:type" content="article">
   {% else %}
     <meta property="og:type" content="website">
   {% endif %}
 
-  {# OG image #}
+  {# OG IMAGE #}
   {% if page.cover_image %}
     {% image page.cover_image fill-1200x630 as ogimg %}
     <meta property="og:image" content="{{ ogimg.url }}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
   {% elif page.hero_image %}
     {% image page.hero_image fill-1200x630 as ogimg %}
     <meta property="og:image" content="{{ ogimg.url }}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
   {% else %}
-    <meta property="og:image" content="{{ base_url }}{% static 'img/og-default.jpg' %}">
+    <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{% static 'img/og-default.jpg' %}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
   {% endif %}
 
-  {# Twitter #}
+  {# =========================
+     TWITTER
+     ========================= #}
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="{{ page.seo_title|default:page.title|default:'Guía de Viajes' }}">
+
   {% if page.search_description %}
-    <meta name="twitter:description" content="{{ page.search_description|striptags|truncatechars:200 }}">
+    {% with twdesc=page.search_description|striptags|truncatechars:200 %}
+      <meta name="twitter:description" content="{{ twdesc }}">
+    {% endwith %}
   {% elif page.intro %}
-    <meta name="twitter:description" content="{{ page.intro|striptags|truncatechars:200 }}">
+    {% with twdesc=page.intro|striptags|truncatechars:200 %}
+      <meta name="twitter:description" content="{{ twdesc }}">
+    {% endwith %}
   {% else %}
     <meta name="twitter:description" content="Guías, destinos y consejos de viaje.">
   {% endif %}
+
   {% if page.cover_image %}
     {% image page.cover_image fill-1200x630 as twimg %}
     <meta name="twitter:image" content="{{ twimg.url }}">
@@ -66,6 +95,9 @@
     {% image page.hero_image fill-1200x630 as twimg %}
     <meta name="twitter:image" content="{{ twimg.url }}">
   {% else %}
-    <meta name="twitter:image" content="{{ base_url }}{% static 'img/og-default.jpg' %}">
+    <meta name="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}{% static 'img/og-default.jpg' %}">
   {% endif %}
+
+  {# Opcional: si tenés cuenta #}
+  {# <meta name="twitter:site" content="@tu_cuenta"> #}
 {% endwith %}

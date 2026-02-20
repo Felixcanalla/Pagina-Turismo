@@ -1,7 +1,7 @@
 {% load static %}
 
 <!doctype html>
-<html lang="es-ar">
+<html lang="es-AR">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -14,8 +14,6 @@
 
   <link rel="icon" href="{% static 'img/favicon.ico' %}">
   <link rel="stylesheet" href="{% static 'css/styles.css' %}">
-
-
 </head>
 
 <body id="top">
@@ -41,87 +39,83 @@
     </div>
   </main>
 
- <footer class="site-footer">
-  <div class="container">
-    <div class="footer-grid">
-      <div class="footer-brand">
-        <a class="footer-logo" href="/">Turismo</a>
-        <p class="footer-text">
-          Guías y destinos para planear tu próximo viaje. Contenido editorial creado desde nuestro CMS.
-        </p>
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a class="footer-logo" href="/">Turismo</a>
+          <p class="footer-text">
+            Guías y destinos para planear tu próximo viaje. Contenido editorial creado desde nuestro CMS.
+          </p>
+        </div>
+
+        <div class="footer-col">
+          <h4>Explorar</h4>
+          <ul>
+            <li><a href="/destinos/">Destinos</a></li>
+            <li><a href="/guias/">Guías</a></li>
+            <li><a href="/sobre/">Sobre</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="/politica-privacidad/">Política de privacidad</a></li>
+            <li><a href="/terminos-condiciones/">Términos y condiciones</a></li>
+            <li><a href="/aviso-afiliados/">Aviso de afiliados</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Contacto</h4>
+          <ul>
+            <li><a href="/contacto/">Escribinos</a></li>
+            <li><a href="mailto:contacto@tusitio.com">contacto@tusitio.com</a></li>
+          </ul>
+
+          <div class="footer-social">
+            {# Reemplazá los href con tus URLs reales #}
+            <a class="social" href="https://www.instagram.com/" target="_blank" rel="noopener" aria-label="Instagram">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5zm10 2H7a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3zm-5 3.5A4.5 4.5 0 1 1 7.5 12 4.51 4.51 0 0 1 12 7.5zm0 2A2.5 2.5 0 1 0 14.5 12 2.5 2.5 0 0 0 12 9.5zm4.75-2.25a1 1 0 1 1-1 1 1 1 0 0 1 1-1z"/>
+              </svg>
+            </a>
+
+            <a class="social" href="https://www.facebook.com/" target="_blank" rel="noopener" aria-label="Facebook">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M22 12a10 10 0 1 0-11.56 9.88v-7H8v-2.88h2.44V9.41c0-2.42 1.44-3.76 3.64-3.76 1.05 0 2.15.19 2.15.19v2.36h-1.21c-1.19 0-1.56.74-1.56 1.5v1.8h2.66L15.7 14.88h-2.24v7A10 10 0 0 0 22 12z"/>
+              </svg>
+            </a>
+
+            <a class="social" href="https://www.youtube.com/" target="_blank" rel="noopener" aria-label="YouTube">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.6 3.5 12 3.5 12 3.5s-7.6 0-9.4.6A3 3 0 0 0 .5 6.2 31.4 31.4 0 0 0 0 12a31.4 31.4 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.8.6 9.4.6 9.4.6s7.6 0 9.4-.6a3 3 0 0 0 2.1-2.1A31.4 31.4 0 0 0 24 12a31.4 31.4 0 0 0-.5-5.8zM9.5 15.5v-7l6 3.5-6 3.5z"/>
+              </svg>
+            </a>
+          </div>
+        </div>
       </div>
 
-      <div class="footer-col">
-        <h4>Explorar</h4>
-        <ul>
-          <li><a href="/destinos/">Destinos</a></li>
-          <li><a href="/guias/">Guías</a></li>
-          <li><a href="/sobre/">Sobre</a></li>
-        </ul>
-      </div>
+      <div class="footer-bottom">
+        <span>© <span id="year"></span> Turismo. Todos los derechos reservados.</span>
 
-      <div class="footer-col">
-        <h4>Legal</h4>
-        <ul>
-          <li><a href="/politica-privacidad/">Política de privacidad</a></li>
-          <li><a href="/terminos-condiciones/">Términos y condiciones</a></li>
-          <li><a href="/aviso-afiliados/">Aviso de afiliados</a></li>
-        </ul>
-      </div>
+        <span class="footer-madeby">
+          Hecho por <a href="#" target="_blank" rel="noopener">Patricio Migone / HDFelix</a>
+        </span>
 
-      <div class="footer-col">
-        <h4>Contacto</h4>
-        <ul>
-          <li><a href="/contacto/">Escribinos</a></li>
-          <li><a href="mailto:contacto@tusitio.com">contacto@tusitio.com</a></li>
-        </ul>
-
-        <div class="footer-social">
-  <a class="social" href="#" aria-label="Instagram">
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5zm10 2H7a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3zm-5 3.5A4.5 4.5 0 1 1 7.5 12 4.51 4.51 0 0 1 12 7.5zm0 2A2.5 2.5 0 1 0 14.5 12 2.5 2.5 0 0 0 12 9.5zm4.75-2.25a1 1 0 1 1-1 1 1 1 0 0 1 1-1z"/>
-    </svg>
-  </a>
-
-  <a class="social" href="#" aria-label="Facebook">
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M22 12a10 10 0 1 0-11.56 9.88v-7H8v-2.88h2.44V9.41c0-2.42 1.44-3.76 3.64-3.76 1.05 0 2.15.19 2.15.19v2.36h-1.21c-1.19 0-1.56.74-1.56 1.5v1.8h2.66L15.7 14.88h-2.24v7A10 10 0 0 0 22 12z"/>
-    </svg>
-  </a>
-
-  <a class="social" href="#" aria-label="YouTube">
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.6 3.5 12 3.5 12 3.5s-7.6 0-9.4.6A3 3 0 0 0 .5 6.2 31.4 31.4 0 0 0 0 12a31.4 31.4 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.8.6 9.4.6 9.4.6s7.6 0 9.4-.6a3 3 0 0 0 2.1-2.1A31.4 31.4 0 0 0 24 12a31.4 31.4 0 0 0-.5-5.8zM9.5 15.5v-7l6 3.5-6 3.5z"/>
-    </svg>
-  </a>
-</div>
-
+        <a class="to-top" href="#top" aria-label="Volver arriba">↑ Volver arriba</a>
       </div>
     </div>
+  </footer>
 
-    <div class="footer-bottom">
-      <span>© <span id="year"></span> Turismo. Todos los derechos reservados.</span>
+  <script>
+    // Año automático (solo 1 vez)
+    const y = document.getElementById("year");
+    if (y) y.textContent = new Date().getFullYear();
+  </script>
 
-      <span class="footer-madeby">
-        Hecho por <a href="#" target="_blank" rel="noopener">Patricio Migone / HDFelix</a>
-      </span>
-
-      <a class="to-top" href="#top" aria-label="Volver arriba">↑ Volver arriba</a>
-    </div>
-  </div>
-</footer>
-
-<script>
-  document.getElementById("year").textContent = new Date().getFullYear();
-</script>
-
-<script>
-  // año automático
-  document.getElementById("year").textContent = new Date().getFullYear();
-</script>
-
-
-  {# Script TOC: resalta sección activa mientras scrolleás (solo si hay TOC) #}
+  {# TOC: resalta sección activa (solo si hay TOC) #}
   <script>
   document.addEventListener("DOMContentLoaded", () => {
     const tocLinks = Array.from(document.querySelectorAll(".toc__link"));
@@ -154,7 +148,6 @@
     setActive(targets[0].id);
   });
   </script>
-  <script src="{% static 'js/toc-active.js' %}"></script>
 
 </body>
 </html>
