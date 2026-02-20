@@ -1,21 +1,21 @@
 from django.contrib import admin
-from django.urls import path, include
-from django.conf import settings
-from django.conf.urls.static import static
+from django.contrib.sitemaps.views import sitemap
+from django.urls import include, path
 
-from wagtail.contrib.sitemaps.views import sitemap  # ✅ Wagtail sitemap
+from pages.sitemaps import sitemaps
 
 urlpatterns = [
-    path("admin/", include("wagtail.admin.urls")),
     path("django-admin/", admin.site.urls),
 
+    # Wagtail admin
+    path("admin/", include("wagtail.admin.urls")),
+
+    # Tus urls propias (si tenés)
     path("", include("core.urls")),
 
-    # ✅ Sitemap de Wagtail (NO usa get_absolute_url)
-    path("sitemap.xml", sitemap, {"sitemaps": sitemaps})
+    # ✅ Sitemap Django (usa tu pages/sitemaps.py)
+    path("sitemap.xml", sitemap, {"sitemaps": sitemaps}),
 
+    # Wagtail pages
     path("", include("wagtail.urls")),
 ]
-
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
