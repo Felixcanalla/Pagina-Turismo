@@ -1,25 +1,22 @@
-{% load wagtailimages_tags %}
-{% with base_url=request.scheme|add:'://'|add:request.get_host %}
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "Article",
-  "headline": {{ page.title|escapejs|safe|json_script:"h" }},
-  "mainEntityOfPage": {
-    "@type": "WebPage",
-    "@id": "{% if page.full_url %}{{ page.full_url }}{% else %}{{ base_url }}{{ request.path }}{% endif %}"
+{# partials/jsonld_article.html #}
+{% if page %}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "{{ request.build_absolute_uri }}"
+    },
+    "headline": "{{ page.title|escapejs }}",
+    {% if page.seo_description %}
+    "description": "{{ page.seo_description|striptags|escapejs }}",
+    {% endif %}
+    {% if page.cover_image %}
+    "image": ["{{ page.cover_image.file.url }}"],
+    {% endif %}
+    "datePublished": "{{ page.first_published_at|date:'c' }}",
+    "dateModified": "{{ page.last_published_at|date:'c' }}"
   }
-  {% if page.search_description %},
-  "description": "{{ page.search_description|striptags|escapejs }}"
-  {% elif page.intro %},
-  "description": "{{ page.intro|striptags|escapejs }}"
-  {% endif %}
-  {% if page.cover_image %},
-  "image": [
-    "{% image page.cover_image fill-1200x630 as img %}{{ img.url }}"
-  ]
-  {% endif %}
-}
-</script>
-{% endwith %}
-1 y
+  </script>
+{% endif %}

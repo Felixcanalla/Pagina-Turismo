@@ -1,7 +1,8 @@
-{% with faq_json=page.get_faq_jsonld %}
-  {% if faq_json %}
-    <script type="application/ld+json">
-      {{ faq_json|safe }}
-    </script>
-  {% endif %}
-{% endwith %}
+{# partials/jsonld_faq.html #}
+{% if page and page.get_faq_jsonld %}
+  {% with faq_json=page.get_faq_jsonld %}
+    {% if faq_json %}
+      <script type="application/ld+json">{{ faq_json|safe }}</script>
+    {% endif %}
+  {% endwith %}
+{% endif %}

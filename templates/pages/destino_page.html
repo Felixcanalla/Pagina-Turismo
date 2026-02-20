@@ -3,8 +3,11 @@
 
 {% block extra_head %}
   {% include "partials/jsonld_breadcrumbs.html" %}
-  {% include "partials/jsonld_destination.html" %}
+  {% include "partials/jsonld_article.html" %}
+  {# solo si querés FAQ en artículos también #}
+  {# {% include "partials/jsonld_faq.html" %} #}
 {% endblock %}
+
 
 {% block content %}
 <article class="container">
