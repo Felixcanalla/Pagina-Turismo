@@ -193,7 +193,7 @@ STORAGES = {
     },
 }
 
-
+ 
 CLOUDINARY_URL = os.environ.get("CLOUDINARY_URL")
 
 if CLOUDINARY_URL:
