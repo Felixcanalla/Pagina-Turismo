@@ -1,19 +1,22 @@
-{% load wagtailimages_tags static %}
+{% load wagtailimages_tags %}
 
+{% with canonical=page.full_url|default:request.build_absolute_uri %}
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
-  "@type": "TouristDestination",
-  "name": "{{ page.title|escapejs }}",
-  "description": "{% if page.seo_description %}{{ page.seo_description|escapejs }}{% elif page.intro %}{{ page.intro|escapejs }}{% else %}{% endif %}",
-  "url": "{% if page.full_url %}{{ page.full_url|escapejs }}{% else %}{{ request.build_absolute_uri|escapejs }}{% endif %}",
-  "image": [
-    {% if page.hero_image %}
-      {% image page.hero_image fill-1200x630 as img %}
-      "{{ request.scheme }}://{{ request.get_host }}{{ img.url }}"
-    {% else %}
-      "{{ request.scheme }}://{{ request.get_host }}{% static 'img/og-default.jpg' %}"
-    {% endif %}
-  ]
+  "@type": "WebPage",
+  "name": "{{ page.seo_title|default:page.title|escapejs }}",
+  "url": "{{ canonical }}"{% if page.search_description %},
+  "description": "{{ page.search_description|striptags|escapejs }}"{% elif page.intro %},
+  "description": "{{ page.intro|striptags|escapejs }}"{% endif %}{% if page.hero_image %},
+  "primaryImageOfPage": {
+    "@type": "ImageObject",
+    "url": "{% image page.hero_image fill-1200x630 as img %}{{ img.url }}"
+  }{% endif %}
 }
 </script>
+
+{% if page.get_faq_jsonld %}
+  <script type="application/ld+json">{{ page.get_faq_jsonld|safe }}</script>
+{% endif %}
+{% endwith %}

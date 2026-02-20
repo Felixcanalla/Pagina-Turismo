@@ -4,7 +4,6 @@
 {% block extra_head %}
   {% include "partials/jsonld_breadcrumbs.html" %}
   {% include "partials/jsonld_article.html" %}
-  {% include "partials/jsonld_faq.html" %}
 {% endblock %}
 
 {% block content %}
@@ -33,26 +32,22 @@
   </header>
 
   <div class="post__content">
-  {% if toc %}
-    <nav class="toc" aria-label="Tabla de contenidos">
-      <h3 class="toc__title">Contenido</h3>
-      <ul class="toc__list">
-        {% for item in toc %}
-          <li class="toc__item">
-            <a class="toc__link" href="#{{ item.anchor }}">{{ item.title }}</a>
-          </li>
-        {% endfor %}
-      </ul>
-    </nav>
-  {% endif %}
+    {% if toc %}
+      <nav class="toc" aria-label="Tabla de contenidos">
+        <h3 class="toc__title">Contenido</h3>
+        <ul class="toc__list">
+          {% for item in toc %}
+            <li class="toc__item">
+              <a class="toc__link" href="#{{ item.anchor }}">{{ item.title }}</a>
+            </li>
+          {% endfor %}
+        </ul>
+      </nav>
+    {% endif %}
 
-  <div class="content post__body">
-    {{ body_html|safe }}
-  </div>
-</div>
-
-  <div class="content post__body">
-    {{ body_html|safe }}
+    <div class="content post__body">
+      {{ body_html|safe }}
+    </div>
   </div>
 
   {# ✅ Destinos relacionados (Orderable) #}

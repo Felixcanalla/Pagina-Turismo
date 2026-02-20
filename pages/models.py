@@ -2,47 +2,158 @@ from django.apps import apps
 from django.core.paginator import Paginator
 from django.db import models
 from django.db.models import Count
-from django.utils.html import format_html
+from django.utils.html import format_html, strip_tags
 from django.utils.safestring import mark_safe
 from django.utils.text import slugify
+
+import json
 
 from modelcluster.fields import ParentalKey
 from modelcluster.tags import ClusterTaggableManager
 from taggit.models import TaggedItemBase
 
 from wagtail import blocks
-from wagtail.admin.panels import FieldPanel, MultiFieldPanel,PageChooserPanel,InlinePanel
+from wagtail.admin.panels import FieldPanel, InlinePanel, MultiFieldPanel, PageChooserPanel
 from wagtail.fields import RichTextField, StreamField
-from wagtail.models import Page, Orderable
-from modelcluster.fields import ParentalManyToManyField 
-from wagtail.search import index
-from .blocks import FAQBlock
-from django.utils.html import strip_tags
-import json
-from .blocks import QuickSectionBlock, QuickSectionsBlock
-
-from django.utils.html import strip_tags
-from django.utils.safestring import mark_safe
+from wagtail.models import Orderable, Page
 from wagtail.rich_text import RichText
-
-
-
+from wagtail.search import index
 
 from .blocks import (
     CTAButtonBlock,
+    FAQBlock,
     GalleryBlock,
     HighlightsBlock,
     ImageBlock,
     InfoGridBlock,
     MapEmbedBlock,
+    QuickSectionBlock,
+    QuickSectionsBlock,
     SectionTitleBlock,
     YouTubeBlock,
 )
 
 
-# =========================
-# HOME (Wagtail como sitio principal)
-# =========================
+# ============================================================
+# Helpers
+# ============================================================
+
+def build_toc_and_body_html(stream):
+    """
+    Genera:
+      - toc: lista de {title, anchor, level}
+      - body_html: HTML renderizado del StreamField, insertando <h2 id="...">
+        para bloques section_title y quick_section(s) sin duplicar títulos.
+
+    Importante:
+      - Los bloques se renderizan con block.render(), pero cuando un bloque trae
+        un título (section_title / quick_section / quick_sections) nosotros
+        rendereamos el <h2 id="..."> manualmente para TOC y luego renderizamos
+        el bloque completo "sin título" usando CSS (.qs__rendered--no-title).
+    """
+    used = {}
+    toc = []
+    parts = []
+
+    def unique_anchor(title: str) -> str:
+        base = slugify(title) or "seccion"
+        used[base] = used.get(base, 0) + 1
+        return base if used[base] == 1 else f"{base}-{used[base]}"
+
+    def add_heading(title: str, subtitle: str = ""):
+        anchor = unique_anchor(title)
+        toc.append({"title": title, "anchor": anchor, "level": 2})
+
+        title = strip_tags(title)
+        subtitle = strip_tags(subtitle)
+
+        if subtitle:
+            parts.append(
+                format_html(
+                    '<section class="block block-title"><h2 id="{}">{}</h2><p class="muted">{}</p></section>',
+                    anchor,
+                    title,
+                    subtitle,
+                )
+            )
+        else:
+            parts.append(
+                format_html(
+                    '<section class="block block-title"><h2 id="{}">{}</h2></section>',
+                    anchor,
+                    title,
+                )
+            )
+
+    if not stream:
+        return [], mark_safe("")
+
+    for block in stream:
+        # 1) Título explícito
+        if block.block_type == "section_title":
+            title = (block.value.get("title") or "").strip()
+            if not title:
+                continue
+            subtitle = (block.value.get("subtitle") or "").strip()
+            add_heading(title, subtitle)
+            continue
+
+        # 2) QuickSection: si tiene title, lo metemos en TOC y luego renderizamos bloque sin repetir H2
+        if block.block_type == "quick_section":
+            title = (block.value.get("title") or "").strip()
+            subtitle = (block.value.get("subtitle") or "").strip()
+
+            if title:
+                add_heading(title, subtitle)
+                parts.append(
+                    format_html(
+                        '<div class="qs__rendered qs__rendered--no-title">{}</div>',
+                        mark_safe(block.render()),
+                    )
+                )
+            else:
+                parts.append(mark_safe(block.render()))
+            continue
+
+        # 3) QuickSections: contenedor con varias secciones
+        if block.block_type == "quick_sections":
+            sections = block.value.get("sections") or []
+            for s in sections:
+                title = (getattr(s, "get", lambda *_: None)("title") or "").strip()
+                if not title:
+                    continue
+                subtitle = (getattr(s, "get", lambda *_: None)("subtitle") or "").strip()
+                add_heading(title, subtitle)
+
+                # Render de la sección completa, pero sin título (ya lo agregamos)
+                parts.append(
+                    format_html(
+                        '<div class="qs__rendered qs__rendered--no-title">{}</div>',
+                        mark_safe(s.render()),
+                    )
+                )
+            continue
+
+        # 4) Otros bloques: render normal
+        parts.append(mark_safe(block.render()))
+
+    return toc, mark_safe("".join(parts))
+
+
+def get_filtered_breadcrumb_ancestors(page: Page):
+    """
+    Breadcrumbs filtrados (sin Welcome/Home) usando depth>=4 como ya venías haciendo.
+    """
+    return [
+        a.specific
+        for a in page.get_ancestors().live().public()
+        if a.depth >= 4
+    ]
+
+
+# ============================================================
+# HOME / SIMPLE
+# ============================================================
 
 class HomePage(Page):
     """Home servido por Wagtail usando el template existente (templates/core/home.html)."""
@@ -100,9 +211,9 @@ class SimplePage(Page):
         verbose_name = "Página simple"
 
 
-# =========================
+# ============================================================
 # GUÍAS
-# =========================
+# ============================================================
 
 class GuiasIndexPage(Page):
     """Índice editorial de guías. Listado + filtros por categoría + paginación."""
@@ -157,6 +268,7 @@ class GuiasIndexPage(Page):
 
 class CategoriaPage(Page):
     """Landing editorial de categoría (SEO). Vive debajo de GuiasIndexPage."""
+
     seo_description = models.CharField(max_length=160, blank=True)
 
     parent_page_types = ["pages.GuiasIndexPage"]
@@ -177,8 +289,9 @@ class CategoriaPage(Page):
 
     def get_context(self, request):
         context = super().get_context(request)
+        ArticuloPageModel = apps.get_model("pages", "ArticuloPage")
         context["articulos"] = (
-            ArticuloPage.objects.live().public()
+            ArticuloPageModel.objects.live().public()
             .child_of(self)
             .order_by("-first_published_at")
         )
@@ -188,12 +301,13 @@ class CategoriaPage(Page):
         verbose_name = "Categoría"
 
 
-# =========================
+# ============================================================
 # DESTINOS
-# =========================
+# ============================================================
 
 class DestinosIndexPage(Page):
     """Índice editorial de Destinos. Vive debajo de HomePage."""
+
     seo_description = models.CharField(max_length=160, blank=True)
 
     parent_page_types = ["pages.HomePage"]
@@ -202,8 +316,9 @@ class DestinosIndexPage(Page):
 
     def get_context(self, request):
         context = super().get_context(request)
+        PaisPageModel = apps.get_model("pages", "PaisPage")
         context["paises"] = (
-            PaisPage.objects.live().public()
+            PaisPageModel.objects.live().public()
             .child_of(self)
             .order_by("title")
         )
@@ -242,8 +357,9 @@ class PaisPage(Page):
 
     def get_context(self, request):
         context = super().get_context(request)
+        DestinoPageModel = apps.get_model("pages", "DestinoPage")
         context["destinos"] = (
-            DestinoPage.objects.live().public()
+            DestinoPageModel.objects.live().public()
             .child_of(self)
             .order_by("title")
         )
@@ -259,75 +375,6 @@ class DestinoPageTag(TaggedItemBase):
         related_name="tagged_items",
         on_delete=models.CASCADE,
     )
-
-
-
-
-
-def build_toc_and_body_html(stream):
-    used = {}
-    toc = []
-    parts = []
-
-    def unique_anchor(title: str) -> str:
-        base = slugify(title) or "seccion"
-        used[base] = used.get(base, 0) + 1
-        return base if used[base] == 1 else f"{base}-{used[base]}"
-
-    def add_heading(title: str, subtitle: str = ""):
-        anchor = unique_anchor(title)
-        toc.append({"title": title, "anchor": anchor, "level": 2})
-
-        if subtitle:
-            parts.append(format_html(
-                '<section class="block block-title"><h2 id="{}">{}</h2><p class="muted">{}</p></section>',
-                anchor, title, subtitle
-            ))
-        else:
-            parts.append(format_html(
-                '<section class="block block-title"><h2 id="{}">{}</h2></section>',
-                anchor, title
-            ))
-
-    for block in stream:
-        if block.block_type == "section_title":
-            title = (block.value.get("title") or "").strip()
-            if not title:
-                continue
-            subtitle = (block.value.get("subtitle") or "").strip()
-            add_heading(title, subtitle)
-
-        elif block.block_type == "quick_section":
-            title = (block.value.get("title") or "").strip()
-            if title:
-                subtitle = (block.value.get("subtitle") or "").strip()
-                add_heading(title, subtitle)
-                parts.append(format_html(
-                    '<div class="qs__rendered qs__rendered--no-title">{}</div>',
-                    mark_safe(block.render())
-                ))
-            else:
-                parts.append(mark_safe(block.render()))
-
-        elif block.block_type == "quick_sections":
-            sections = block.value.get("sections") or []
-            for s in sections:
-                title = (s.get("title") or "").strip()
-                if not title:
-                    continue
-                subtitle = (s.get("subtitle") or "").strip()
-                add_heading(title, subtitle)
-                parts.append(format_html(
-                    '<div class="qs__rendered qs__rendered--no-title">{}</div>',
-                    mark_safe(s.render())
-                ))
-
-        else:
-            parts.append(mark_safe(block.render()))
-
-    return toc, mark_safe("".join(parts))
-
-    
 
 
 class DestinoPage(Page):
@@ -373,7 +420,7 @@ class DestinoPage(Page):
         blank=True,
     )
 
-    # ✅ FAQ dinámico PRO (bloque con lista de preguntas)
+    # ✅ FAQ dinámico PRO
     faq = StreamField(
         [
             ("faq", FAQBlock()),
@@ -454,16 +501,14 @@ class DestinoPage(Page):
         }
 
         return mark_safe(json.dumps(data, ensure_ascii=False))
+
     def get_context(self, request, *args, **kwargs):
         context = super().get_context(request, *args, **kwargs)
 
         desired = 6
 
         # ✅ Breadcrumbs filtrados (sin Welcome/Home)
-        context["breadcrumb_ancestors"] = [
-            a.specific for a in self.get_ancestors().live().public()
-            if a.depth >= 4
-        ]
+        context["breadcrumb_ancestors"] = get_filtered_breadcrumb_ancestors(self)
 
         # ✅ Relacionados por tags
         related = DestinoPage.objects.none()
@@ -499,7 +544,6 @@ class DestinoPage(Page):
         context["related_destinos"] = related_list
 
         # ✅ CTAs: manual override > automático por tags
-        # ✅ CTAs: manual override > automático por tags
         if self.cta_manual and len(self.cta_manual):
             context["ctas"] = self.cta_manual
             context["ctas_source"] = "manual"
@@ -508,14 +552,10 @@ class DestinoPage(Page):
             ctas_auto = []
 
             def add_cta(title, url, button_text="Ver opciones", note=""):
-                ctas_auto.append({
-                    "title": title,
-                    "url": url,
-                    "button_text": button_text,
-                    "note": note,
-                })
+                ctas_auto.append(
+                    {"title": title, "url": url, "button_text": button_text, "note": note}
+                )
 
-            # Reglas combinables
             if "playa" in tag_names:
                 add_cta("Alojamientos cerca de la playa", "https://www.booking.com/", "Ver alojamientos", "Compará precios y disponibilidad")
                 add_cta("Snorkel y paseos en barco", "https://www.getyourguide.com/", "Ver actividades", "Experiencias típicas de playa")
@@ -567,10 +607,9 @@ class DestinoPage(Page):
         verbose_name = "Destino"
 
 
-# =========================
+# ============================================================
 # ARTÍCULO / GUÍA (con TOC)
-# =========================
-
+# ============================================================
 
 class ArticuloPage(Page):
     template = "pages/articulo_page.html"
@@ -597,7 +636,6 @@ class ArticuloPage(Page):
             ("cta", CTAButtonBlock()),
             ("quick_sections", QuickSectionsBlock()),
             ("quick_section", QuickSectionBlock()),
-
         ],
         use_json_field=True,
         blank=True,
@@ -625,114 +663,16 @@ class ArticuloPage(Page):
     class Meta:
         verbose_name = "Artículo"
 
-    # --- TOC (Tabla de contenidos) basado en bloques section_title ---
-    from django.utils.text import slugify
-from django.utils.html import format_html
-from django.utils.safestring import mark_safe
+    def get_context(self, request, *args, **kwargs):
+        context = super().get_context(request, *args, **kwargs)
 
-def _build_toc_and_body_html(self):
-    used = {}
-    toc = []
-    parts = []
-
-    def unique_anchor(title: str) -> str:
-        base = slugify(title) or "seccion"
-        used[base] = used.get(base, 0) + 1
-        return base if used[base] == 1 else f"{base}-{used[base]}"
-
-    def render_heading(title, subtitle=""):
-        anchor = unique_anchor(title)
-        toc.append({"title": title, "anchor": anchor, "level": 2})
-
-        if subtitle:
-            parts.append(format_html(
-                '<section class="block block-title"><h2 id="{}">{}</h2><p class="muted">{}</p></section>',
-                anchor, title, subtitle
-            ))
-        else:
-            parts.append(format_html(
-                '<section class="block block-title"><h2 id="{}">{}</h2></section>',
-                anchor, title
-            ))
-        return anchor
-
-    for block in self.body:
-        if block.block_type == "section_title":
-            title = (block.value.get("title") or "").strip()
-            if not title:
-                continue
-            subtitle = (block.value.get("subtitle") or "").strip()
-            render_heading(title, subtitle)
-
-        elif block.block_type == "quick_section":
-            title = (block.value.get("title") or "").strip()
-            if title:
-                subtitle = (block.value.get("subtitle") or "").strip()
-                anchor = render_heading(title, subtitle)
-
-                # Render cuerpo + media del bloque (sin duplicar el h2)
-                body = block.value.get("body")
-                image = block.value.get("image")
-                caption = (block.value.get("caption") or "").strip()
-                cta_text = (block.value.get("cta_text") or "").strip()
-                cta_url = (block.value.get("cta_url") or "").strip()
-                cta_note = (block.value.get("cta_note") or "").strip()
-
-                if body:
-                    parts.append(format_html('<div class="qs__body">{}</div>', mark_safe(body)))
-                if image:
-                    # render del bloque original para imagen/cta (más simple)
-                    # pero sin repetir h2: lo manejamos arriba
-                    pass
-
-                # Para no complicar, renderizamos el bloque completo pero ocultamos su h2 via CSS
-                parts.append(format_html(
-                    '<div class="qs__rendered qs__rendered--no-title">{}</div>',
-                    mark_safe(block.render())
-                ))
-
-            else:
-                parts.append(mark_safe(block.render()))
-
-        elif block.block_type == "quick_sections":
-            # Contenedor con muchas secciones
-            sections = block.value.get("sections") or []
-            for s in sections:
-                title = (s.get("title") or "").strip()
-                if not title:
-                    continue
-                subtitle = (s.get("subtitle") or "").strip()
-                render_heading(title, subtitle)
-
-                # Renderizamos la sección completa pero sin título
-                # (el título ya lo renderizamos con id/anchor)
-                parts.append(format_html(
-                    '<div class="qs__rendered qs__rendered--no-title">{}</div>',
-                    mark_safe(s.render())
-                ))
-
-        else:
-            parts.append(mark_safe(block.render()))
-
-    return toc, mark_safe("".join(parts))
-
-
-    def get_context(self, request):
-        context = super().get_context(request)
-
-        toc, body_html = self._build_toc_and_body_html()
+        toc, body_html = build_toc_and_body_html(self.body)
         context["toc"] = toc
         context["body_html"] = body_html
 
-        context["breadcrumb_ancestors"] = [
-            a.specific for a in self.get_ancestors().live().public()
-            if a.depth >= 4
-        ]
+        context["breadcrumb_ancestors"] = get_filtered_breadcrumb_ancestors(self)
 
         return context
-
-
-
 
 
 class ArticuloDestinoRelation(Orderable):
@@ -758,4 +698,3 @@ class ArticuloDestinoRelation(Orderable):
                 name="unique_articulo_destino_relation_v4",
             )
         ]
-

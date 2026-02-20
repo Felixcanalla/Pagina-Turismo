@@ -1,6 +1,5 @@
 User-agent: *
-Disallow: /cms/
 Disallow: /admin/
-Disallow: /documents/
+Disallow: /django-admin/
 
 Sitemap: {{ request.scheme }}://{{ request.get_host }}/sitemap.xml

@@ -1,7 +1,4 @@
-{% load wagtailcore_tags %}
-
-{% load wagtailcore_tags %}
-
+{% with canonical=page.full_url|default:request.build_absolute_uri %}
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -12,21 +9,20 @@
       "position": 1,
       "name": "Inicio",
       "item": "{{ request.scheme }}://{{ request.get_host }}/"
-    }
-    {% for ancestor in breadcrumb_ancestors %}
-      ,{
-        "@type": "ListItem",
-        "position": {{ forloop.counter|add:1 }},
-        "name": "{{ ancestor.title|escapejs }}",
-        "item": "{{ request.scheme }}://{{ request.get_host }}{{ ancestor.url }}"
-      }
-    {% endfor %}
-    ,{
+    }{% if breadcrumb_ancestors %}{% for crumb in breadcrumb_ancestors %},
+    {
       "@type": "ListItem",
-      "position": {{ breadcrumb_ancestors|length|add:2 }},
+      "position": {{ forloop.counter|add:1 }},
+      "name": "{{ crumb.title|escapejs }}",
+      "item": "{{ crumb.full_url }}"
+    }{% endfor %}{% endif %},
+    {
+      "@type": "ListItem",
+      "position": {% if breadcrumb_ancestors %}{{ breadcrumb_ancestors|length|add:2 }}{% else %}2{% endif %},
       "name": "{{ page.title|escapejs }}",
-      "item": "{% if page.full_url %}{{ page.full_url|escapejs }}{% else %}{{ request.build_absolute_uri|escapejs }}{% endif %}"
+      "item": "{{ canonical }}"
     }
   ]
 }
 </script>
+{% endwith %}

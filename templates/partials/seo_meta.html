@@ -1,57 +1,71 @@
 {% load wagtailimages_tags static %}
 
-{# Base absoluta (sirve en local y prod) #}
 {% with base_url=request.scheme|add:'://'|add:request.get_host %}
+  <title>{{ page.seo_title|default:page.title|default:"Guía de Viajes" }}</title>
 
-{# Title #}
-<title>{{ page.seo_title|default:page.title|default:"Guía de Viajes" }}</title>
+  {# Description #}
+  {% if page.search_description %}
+    <meta name="description" content="{{ page.search_description|striptags|truncatechars:160 }}">
+  {% elif page.intro %}
+    <meta name="description" content="{{ page.intro|striptags|truncatechars:160 }}">
+  {% else %}
+    <meta name="description" content="Guías, destinos y consejos de viaje.">
+  {% endif %}
 
-{# Description: seo_description → intro → default #}
-<meta name="description" content="{% if page.seo_description %}{{ page.seo_description }}{% elif page.intro %}{{ page.intro }}{% else %}Guías de viaje en español con itinerarios, consejos y destinos para organizar tu próximo viaje.{% endif %}">
+  {# Canonical #}
+  {% if page.full_url %}
+    <link rel="canonical" href="{{ page.full_url }}">
+  {% else %}
+    <link rel="canonical" href="{{ base_url }}{{ request.path }}">
+  {% endif %}
 
-{# Canonical #}
-{% if page.full_url %}
-  <link rel="canonical" href="{{ page.full_url }}">
-  <meta property="og:url" content="{{ page.full_url }}">
-{% else %}
-  <link rel="canonical" href="{{ request.build_absolute_uri }}">
-  <meta property="og:url" content="{{ request.build_absolute_uri }}">
-{% endif %}
+  {# Open Graph #}
+  <meta property="og:site_name" content="Guía de Viajes">
+  <meta property="og:title" content="{{ page.seo_title|default:page.title|default:'Guía de Viajes' }}">
+  {% if page.search_description %}
+    <meta property="og:description" content="{{ page.search_description|striptags|truncatechars:200 }}">
+  {% elif page.intro %}
+    <meta property="og:description" content="{{ page.intro|striptags|truncatechars:200 }}">
+  {% else %}
+    <meta property="og:description" content="Guías, destinos y consejos de viaje.">
+  {% endif %}
+  <meta property="og:url" content="{% if page.full_url %}{{ page.full_url }}{% else %}{{ base_url }}{{ request.path }}{% endif %}">
 
-{# OG core #}
-<meta property="og:site_name" content="Guía de Viajes">
-<meta property="og:locale" content="es_AR">
+  {# og:type (simple y seguro) #}
+  {% if page.cover_image or page.hero_image %}
+    <meta property="og:type" content="article">
+  {% else %}
+    <meta property="og:type" content="website">
+  {% endif %}
 
-{# og:type: si existe cover_image asumimos contenido tipo “article” en páginas de detalle #}
-<meta property="og:type" content="{% if page.first_published_at %}article{% else %}website{% endif %}">
+  {# OG image #}
+  {% if page.cover_image %}
+    {% image page.cover_image fill-1200x630 as ogimg %}
+    <meta property="og:image" content="{{ ogimg.url }}">
+  {% elif page.hero_image %}
+    {% image page.hero_image fill-1200x630 as ogimg %}
+    <meta property="og:image" content="{{ ogimg.url }}">
+  {% else %}
+    <meta property="og:image" content="{{ base_url }}{% static 'img/og-default.jpg' %}">
+  {% endif %}
 
-<meta property="og:title" content="{{ page.seo_title|default:page.title|default:'Guía de Viajes' }}">
-<meta property="og:description" content="{% if page.seo_description %}{{ page.seo_description }}{% elif page.intro %}{{ page.intro }}{% else %}Guías de viaje en español con itinerarios, consejos y destinos.{% endif %}">
-
-{# OG image: cover → hero → default #}
-{% if page.cover_image %}
-  {% image page.cover_image fill-1200x630 as ogimg %}
-  <meta property="og:image" content="{{ base_url }}{{ ogimg.url }}">
-{% elif page.hero_image %}
-  {% image page.hero_image fill-1200x630 as ogimg %}
-  <meta property="og:image" content="{{ base_url }}{{ ogimg.url }}">
-{% else %}
-  <meta property="og:image" content="{{ base_url }}{% static 'img/og-default.jpg' %}">
-{% endif %}
-
-{# Twitter #}
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="{{ page.seo_title|default:page.title|default:'Guía de Viajes' }}">
-<meta name="twitter:description" content="{% if page.seo_description %}{{ page.seo_description }}{% elif page.intro %}{{ page.intro }}{% else %}Guías de viaje en español con itinerarios, consejos y destinos.{% endif %}">
-
-{% if page.cover_image %}
-  {% image page.cover_image fill-1200x630 as twimg %}
-  <meta name="twitter:image" content="{{ base_url }}{{ twimg.url }}">
-{% elif page.hero_image %}
-  {% image page.hero_image fill-1200x630 as twimg %}
-  <meta name="twitter:image" content="{{ base_url }}{{ twimg.url }}">
-{% else %}
-  <meta name="twitter:image" content="{{ base_url }}{% static 'img/og-default.jpg' %}">
-{% endif %}
-
+  {# Twitter #}
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ page.seo_title|default:page.title|default:'Guía de Viajes' }}">
+  {% if page.search_description %}
+    <meta name="twitter:description" content="{{ page.search_description|striptags|truncatechars:200 }}">
+  {% elif page.intro %}
+    <meta name="twitter:description" content="{{ page.intro|striptags|truncatechars:200 }}">
+  {% else %}
+    <meta name="twitter:description" content="Guías, destinos y consejos de viaje.">
+  {% endif %}
+  {% if page.cover_image %}
+    {% image page.cover_image fill-1200x630 as twimg %}
+    <meta name="twitter:image" content="{{ twimg.url }}">
+  {% elif page.hero_image %}
+    {% image page.hero_image fill-1200x630 as twimg %}
+    <meta name="twitter:image" content="{{ twimg.url }}">
+  {% else %}
+    <meta name="twitter:image" content="{{ base_url }}{% static 'img/og-default.jpg' %}">
+  {% endif %}
 {% endwith %}

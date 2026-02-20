@@ -1,38 +1,25 @@
-{% load wagtailimages_tags static %}
-
+{% load wagtailimages_tags %}
 {% with base_url=request.scheme|add:'://'|add:request.get_host %}
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
-  "@type": "BlogPosting",
-  "headline": "{{ page.title|escapejs }}",
-  "description": "{% if page.seo_description %}{{ page.seo_description|escapejs }}{% elif page.intro %}{{ page.intro|escapejs }}{% endif %}",
+  "@type": "Article",
+  "headline": {{ page.title|escapejs|safe|json_script:"h" }},
   "mainEntityOfPage": {
     "@type": "WebPage",
-    "@id": "{% if page.full_url %}{{ page.full_url|escapejs }}{% else %}{{ request.build_absolute_uri|escapejs }}{% endif %}"
-  },
-  "datePublished": "{{ page.first_published_at|date:'c' }}",
-  "dateModified": "{{ page.last_published_at|default:page.first_published_at|date:'c' }}",
-  "author": { "@type": "Person", "name": "Patricio Migone" },
-  "publisher": {
-    "@type": "Organization",
-    "name": "{{ request.site.site_name|default:'Blog de Viajes'|escapejs }}",
-    "logo": {
-      "@type": "ImageObject",
-      "url": "{{ base_url }}{% static 'img/logo-512.png' %}"
-    }
-  },
+    "@id": "{% if page.full_url %}{{ page.full_url }}{% else %}{{ base_url }}{{ request.path }}{% endif %}"
+  }
+  {% if page.search_description %},
+  "description": "{{ page.search_description|striptags|escapejs }}"
+  {% elif page.intro %},
+  "description": "{{ page.intro|striptags|escapejs }}"
+  {% endif %}
+  {% if page.cover_image %},
   "image": [
-    {% if page.cover_image %}
-      {% image page.cover_image fill-1200x630 as ldimg %}
-      "{{ base_url }}{{ ldimg.url }}"
-    {% elif page.hero_image %}
-      {% image page.hero_image fill-1200x630 as ldimg %}
-      "{{ base_url }}{{ ldimg.url }}"
-    {% else %}
-      "{{ base_url }}{% static 'img/og-default.jpg' %}"
-    {% endif %}
+    "{% image page.cover_image fill-1200x630 as img %}{{ img.url }}"
   ]
+  {% endif %}
 }
 </script>
 {% endwith %}
+1 y
