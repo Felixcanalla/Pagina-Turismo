@@ -397,10 +397,9 @@ class DestinoPage(Page):
     )
 
     # ✅ Campo temporal para pegar HTML (Docs/Word)
-    # IMPORTANTE: el nombre debe coincidir con la columna real en DB: bulk_paste
     bulk_paste = models.TextField(
         blank=True,
-        default="",  # ✅ evita NULL en Postgres
+        default="",
         help_text="Pegá HTML (Docs/Word). Al guardar, se convierte a bloques automáticamente.",
     )
 
