@@ -747,8 +747,9 @@ class DestinoPage(Page):
 
 
 
+
+
 class ArticuloPage(Page):
-    # ✅ Renombrado: antes "contenido_bruto"
     bulk_paste = models.TextField(
         blank=True,
         default="",
@@ -779,9 +780,6 @@ class ArticuloPage(Page):
 
     template = "pages/articulo_page.html"
 
-    # ---------------------------
-    # Helpers
-    # ---------------------------
     def _looks_like_youtube(self, url: str) -> bool:
         u = (url or "").lower()
         return ("youtube.com" in u) or ("youtu.be" in u)
@@ -795,16 +793,14 @@ class ArticuloPage(Page):
         root = soup.body or soup
 
         stream_data = []
-        pending_paragraphs = []
+        pending = []
 
-        def flush_paragraphs():
-            nonlocal pending_paragraphs
-            if not pending_paragraphs:
-                return
-            combined = "".join(pending_paragraphs).strip()
+        def flush():
+            nonlocal pending
+            combined = "".join(pending).strip()
             if combined:
                 stream_data.append({"type": "rich_text", "value": combined})
-            pending_paragraphs = []
+            pending = []
 
         for node in root.descendants:
             if not getattr(node, "name", None):
@@ -812,123 +808,76 @@ class ArticuloPage(Page):
 
             tag = node.name.lower()
 
-            # contenedores comunes que no aportan contenido
             if tag in ("html", "head", "body", "div", "span"):
                 continue
 
             if tag == "h2":
-                flush_paragraphs()
+                flush()
                 title = node.get_text(" ", strip=True)
                 if title:
-                    stream_data.append(
-                        {"type": "section_title", "value": {"title": title, "subtitle": ""}}
-                    )
+                    stream_data.append({"type": "section_title", "value": {"title": title, "subtitle": ""}})
 
             elif tag == "p":
-                inner_html = (node.decode_contents() or "").strip()
+                inner = (node.decode_contents() or "").strip()
                 text = node.get_text(" ", strip=True)
-                if not inner_html or text == "":
-                    continue
-                pending_paragraphs.append(f"<p>{inner_html}</p>")
+                if inner and text:
+                    pending.append(f"<p>{inner}</p>")
 
             elif tag == "img":
-                flush_paragraphs()
-                # Nota: si querés auto-importar imágenes reales, acá habría que resolver src -> Image.
+                flush()
                 stream_data.append({"type": "image", "value": {"image": None, "caption": ""}})
 
             elif tag == "iframe":
-                flush_paragraphs()
+                flush()
                 src = (node.get("src") or "").strip()
 
                 if self._looks_like_youtube(src):
-                    stream_data.append(
-                        {"type": "youtube", "value": {"title": "", "video": (src if fill_embed_urls else "")}}
-                    )
+                    stream_data.append({"type": "youtube", "value": {"title": "", "video": (src if fill_embed_urls else "")}})
                 elif self._looks_like_maps(src):
-                    stream_data.append(
-                        {"type": "map", "value": {"title": "", "map_url": (src if fill_embed_urls else "")}}
-                    )
+                    stream_data.append({"type": "map", "value": {"title": "", "map_url": (src if fill_embed_urls else "")}})
                 else:
-                    safe_src = src.replace('"', "&quot;")
-                    note = "📌 Aquí iba un iframe (maps u otro embed). Pegá la URL manualmente: "
-                    stream_data.append(
-                        {
-                            "type": "rich_text",
-                            "value": (
-                                f"<p>{note}<a href=\"{safe_src}\" target=\"_blank\" rel=\"noopener\">"
-                                f"{safe_src}</a></p>"
-                            ),
-                        }
-                    )
+                    safe = src.replace('"', "&quot;")
+                    stream_data.append({"type": "rich_text", "value": f"<p>Embed: <a href=\"{safe}\" target=\"_blank\" rel=\"noopener\">{safe}</a></p>"})
 
-        flush_paragraphs()
+        flush()
         return stream_data
 
     def _build_toc(self):
-        """
-        ✅ TOC robusto para artículos:
-        - section_title
-        - quick_section
-        - quick_sections.sections (cuando usás el contenedor)
-        """
         toc = []
         if not self.body:
             return toc
 
         for block in self.body:
-            btype = block.block_type
-            val = block.value
-
-            if btype == "section_title":
-                title = (val.get("title") if isinstance(val, dict) else "") or ""
-                title = title.strip()
+            if block.block_type == "section_title":
+                title = (block.value.get("title") or "").strip()
                 if title:
                     toc.append({"title": title, "anchor": slugify(title)})
 
-            elif btype == "quick_section":
-                title = (val.get("title") or "").strip()
+            elif block.block_type == "quick_section":
+                title = (block.value.get("title") or "").strip()
                 if title:
                     toc.append({"title": title, "anchor": slugify(title)})
 
-            elif btype == "quick_sections":
-                # val es un StructValue (se comporta como dict para .get)
-                for s in val.get("sections", []) or []:
-                    stitle = (s.get("title") or "").strip()
-                    if stitle:
-                        toc.append({"title": stitle, "anchor": slugify(stitle)})
+            elif block.block_type == "quick_sections":
+                for s in block.value.get("sections", []) or []:
+                    st = (s.get("title") or "").strip()
+                    if st:
+                        toc.append({"title": st, "anchor": slugify(st)})
 
         return toc
 
-    # ---------------------------
-    # Wagtail hooks
-    # ---------------------------
     def get_context(self, request, *args, **kwargs):
         context = super().get_context(request, *args, **kwargs)
-
         context["breadcrumb_ancestors"] = get_filtered_breadcrumb_ancestors(self)
-
-        # ✅ Como tu template ahora renderiza page.body con include_block,
-        #    body_html pasa a ser opcional (lo dejamos por compatibilidad / debug)
         context["toc"] = self._build_toc()
-        context["body_html"] = ""  # opcional: mantenemos la key para no romper templates viejos
-
         return context
 
     def save(self, *args, **kwargs):
-        """
-        ✅ Import HTML -> StreamField
-        - Convierte bulk_paste si viene con contenido.
-        - No toca body si bulk_paste está vacío.
-        - Vacía bulk_paste después de convertir.
-        """
+        # Si pegaste algo, siempre lo convertimos y vaciamos bulk_paste
         if self.bulk_paste and self.bulk_paste.strip():
-            # Si querés mantener el guard-rail anterior, descomentá la condición:
-            # if not self.body or len(self.body) == 0:
             self.body = self._html_to_stream_data(self.bulk_paste, fill_embed_urls=True)
             self.bulk_paste = ""
-
         super().save(*args, **kwargs)
-
 class ArticuloDestinoRelation(Orderable):
     articulo = ParentalKey(
         "pages.ArticuloPage",
