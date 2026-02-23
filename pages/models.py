@@ -744,8 +744,12 @@ class DestinoPage(Page):
 # ============================================================
 
 
+
+
+
 class ArticuloPage(Page):
-    contenido_bruto = models.TextField(
+    # ✅ Renombrado: antes "contenido_bruto"
+    bulk_paste = models.TextField(
         blank=True,
         default="",
         help_text="Pegá HTML (Docs/Word). Al guardar, se convierte a bloques automáticamente.",
@@ -758,7 +762,7 @@ class ArticuloPage(Page):
             ("image", ImageBlock()),
             ("gallery", GalleryBlock()),
             ("highlights", HighlightsBlock()),
-            ("map", MapEmbedBlock()),  # ✅ agregado
+            ("map", MapEmbedBlock()),
             ("youtube", YouTubeBlock()),
             ("cta", CTAButtonBlock()),
             ("quick_sections", QuickSectionsBlock()),
@@ -769,10 +773,15 @@ class ArticuloPage(Page):
     )
 
     content_panels = Page.content_panels + [
-        FieldPanel("contenido_bruto"),
+        FieldPanel("bulk_paste"),
         FieldPanel("body"),
     ]
 
+    template = "pages/articulo_page.html"
+
+    # ---------------------------
+    # Helpers
+    # ---------------------------
     def _looks_like_youtube(self, url: str) -> bool:
         u = (url or "").lower()
         return ("youtube.com" in u) or ("youtu.be" in u)
@@ -803,6 +812,7 @@ class ArticuloPage(Page):
 
             tag = node.name.lower()
 
+            # contenedores comunes que no aportan contenido
             if tag in ("html", "head", "body", "div", "span"):
                 continue
 
@@ -823,6 +833,7 @@ class ArticuloPage(Page):
 
             elif tag == "img":
                 flush_paragraphs()
+                # Nota: si querés auto-importar imágenes reales, acá habría que resolver src -> Image.
                 stream_data.append({"type": "image", "value": {"image": None, "caption": ""}})
 
             elif tag == "iframe":
@@ -830,36 +841,92 @@ class ArticuloPage(Page):
                 src = (node.get("src") or "").strip()
 
                 if self._looks_like_youtube(src):
-                    # ✅ youtube: placeholder o autocompletado
                     stream_data.append(
                         {"type": "youtube", "value": {"title": "", "video": (src if fill_embed_urls else "")}}
                     )
-
                 elif self._looks_like_maps(src):
-                    # ✅ maps: placeholder o autocompletado
-                    # Tu MapEmbedBlock pide /maps/embed?... (src suele ser eso)
                     stream_data.append(
                         {"type": "map", "value": {"title": "", "map_url": (src if fill_embed_urls else "")}}
                     )
-
                 else:
                     safe_src = src.replace('"', "&quot;")
                     note = "📌 Aquí iba un iframe (maps u otro embed). Pegá la URL manualmente: "
                     stream_data.append(
                         {
                             "type": "rich_text",
-                            "value": f"<p>{note}<a href=\"{safe_src}\" target=\"_blank\" rel=\"noopener\">{safe_src}</a></p>",
+                            "value": (
+                                f"<p>{note}<a href=\"{safe_src}\" target=\"_blank\" rel=\"noopener\">"
+                                f"{safe_src}</a></p>"
+                            ),
                         }
                     )
 
         flush_paragraphs()
         return stream_data
 
+    def _build_toc(self):
+        """
+        ✅ TOC robusto para artículos:
+        - section_title
+        - quick_section
+        - quick_sections.sections (cuando usás el contenedor)
+        """
+        toc = []
+        if not self.body:
+            return toc
+
+        for block in self.body:
+            btype = block.block_type
+            val = block.value
+
+            if btype == "section_title":
+                title = (val.get("title") if isinstance(val, dict) else "") or ""
+                title = title.strip()
+                if title:
+                    toc.append({"title": title, "anchor": slugify(title)})
+
+            elif btype == "quick_section":
+                title = (val.get("title") or "").strip()
+                if title:
+                    toc.append({"title": title, "anchor": slugify(title)})
+
+            elif btype == "quick_sections":
+                # val es un StructValue (se comporta como dict para .get)
+                for s in val.get("sections", []) or []:
+                    stitle = (s.get("title") or "").strip()
+                    if stitle:
+                        toc.append({"title": stitle, "anchor": slugify(stitle)})
+
+        return toc
+
+    # ---------------------------
+    # Wagtail hooks
+    # ---------------------------
+    def get_context(self, request, *args, **kwargs):
+        context = super().get_context(request, *args, **kwargs)
+
+        context["breadcrumb_ancestors"] = get_filtered_breadcrumb_ancestors(self)
+
+        # ✅ Como tu template ahora renderiza page.body con include_block,
+        #    body_html pasa a ser opcional (lo dejamos por compatibilidad / debug)
+        context["toc"] = self._build_toc()
+        context["body_html"] = ""  # opcional: mantenemos la key para no romper templates viejos
+
+        return context
+
     def save(self, *args, **kwargs):
-        # ✅ Guard-rail: no pisa body si ya tiene contenido
-        if self.contenido_bruto and self.contenido_bruto.strip() and (not self.body or len(self.body) == 0):
-            self.body = self._html_to_stream_data(self.contenido_bruto, fill_embed_urls=True)
-            self.contenido_bruto = ""
+        """
+        ✅ Import HTML -> StreamField
+        - Convierte bulk_paste si viene con contenido.
+        - No toca body si bulk_paste está vacío.
+        - Vacía bulk_paste después de convertir.
+        """
+        if self.bulk_paste and self.bulk_paste.strip():
+            # Si querés mantener el guard-rail anterior, descomentá la condición:
+            # if not self.body or len(self.body) == 0:
+            self.body = self._html_to_stream_data(self.bulk_paste, fill_embed_urls=True)
+            self.bulk_paste = ""
+
         super().save(*args, **kwargs)
 
 class ArticuloDestinoRelation(Orderable):
