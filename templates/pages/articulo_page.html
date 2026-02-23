@@ -30,6 +30,8 @@
       {% endif %}
     </div>
 
+    {# cover_image no existe en tu ArticuloPage actual.
+       Si querés imagen de portada, agregá cover_image al modelo o eliminá este bloque. #}
     {% if page.cover_image %}
       {% image page.cover_image fill-1600x700 class="hero-img" %}
     {% endif %}
@@ -50,7 +52,12 @@
     {% endif %}
 
     <div class="content post__body">
-      {% if page.body %}
+      {# Si aplicás el fix recomendado: en get_context() generás body_html con build_toc_and_body_html(self.body)
+         y renderizás directamente el HTML ya con <h2 id="..."> que coincide con el TOC. #}
+      {% if body_html %}
+        {{ body_html }}
+      {% elif page.body %}
+        {# Fallback: render tradicional de bloques #}
         {% for block in page.body %}
           {% include_block block %}
         {% endfor %}
@@ -61,16 +68,18 @@
   </div>
 
   {# ✅ Destinos relacionados (Orderable) #}
-  {% if page.destinos_relacionados.all %}
-    <section class="related">
-      <h2>Destinos relacionados</h2>
-      <ul>
-        {% for rel in page.destinos_relacionados.all %}
-          <li><a href="{{ rel.destino.url }}">{{ rel.destino.title }}</a></li>
-        {% endfor %}
-      </ul>
-    </section>
-  {% endif %}
+  {% with related=page.destinos_relacionados.all %}
+    {% if related %}
+      <section class="related">
+        <h2>Destinos relacionados</h2>
+        <ul>
+          {% for rel in related %}
+            <li><a href="{{ rel.destino.url }}">{{ rel.destino.title }}</a></li>
+          {% endfor %}
+        </ul>
+      </section>
+    {% endif %}
+  {% endwith %}
 
 </article>
 {% endblock %}

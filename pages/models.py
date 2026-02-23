@@ -802,6 +802,9 @@ class ArticuloPage(Page):
                 stream_data.append({"type": "rich_text", "value": combined})
             pending = []
 
+        # Guardar estos tags como HTML dentro del RichText
+        KEEP_AS_HTML = {"p", "h3", "ul", "ol", "table", "blockquote", "hr"}
+
         for node in root.descendants:
             if not getattr(node, "name", None):
                 continue
@@ -815,29 +818,39 @@ class ArticuloPage(Page):
                 flush()
                 title = node.get_text(" ", strip=True)
                 if title:
-                    stream_data.append({"type": "section_title", "value": {"title": title, "subtitle": ""}})
+                    stream_data.append(
+                        {"type": "section_title", "value": {"title": title, "subtitle": ""}}
+                    )
+                continue
 
-            elif tag == "p":
-                inner = (node.decode_contents() or "").strip()
-                text = node.get_text(" ", strip=True)
-                if inner and text:
-                    pending.append(f"<p>{inner}</p>")
+            if tag in KEEP_AS_HTML:
+                # Guarda el HTML completo del nodo (incluye li/tr/td internos)
+                pending.append(str(node))
+                continue
 
-            elif tag == "img":
+            if tag == "img":
                 flush()
                 stream_data.append({"type": "image", "value": {"image": None, "caption": ""}})
+                continue
 
-            elif tag == "iframe":
+            if tag == "iframe":
                 flush()
                 src = (node.get("src") or "").strip()
 
                 if self._looks_like_youtube(src):
-                    stream_data.append({"type": "youtube", "value": {"title": "", "video": (src if fill_embed_urls else "")}})
+                    stream_data.append(
+                        {"type": "youtube", "value": {"title": "", "video": (src if fill_embed_urls else "")}}
+                    )
                 elif self._looks_like_maps(src):
-                    stream_data.append({"type": "map", "value": {"title": "", "map_url": (src if fill_embed_urls else "")}})
+                    stream_data.append(
+                        {"type": "map", "value": {"title": "", "map_url": (src if fill_embed_urls else "")}}
+                    )
                 else:
                     safe = src.replace('"', "&quot;")
-                    stream_data.append({"type": "rich_text", "value": f"<p>Embed: <a href=\"{safe}\" target=\"_blank\" rel=\"noopener\">{safe}</a></p>"})
+                    stream_data.append(
+                        {"type": "rich_text", "value": f"<p>Embed: <a href=\"{safe}\" target=\"_blank\" rel=\"noopener\">{safe}</a></p>"}
+                    )
+                continue
 
         flush()
         return stream_data
@@ -869,7 +882,10 @@ class ArticuloPage(Page):
     def get_context(self, request, *args, **kwargs):
         context = super().get_context(request, *args, **kwargs)
         context["breadcrumb_ancestors"] = get_filtered_breadcrumb_ancestors(self)
-        context["toc"] = self._build_toc()
+
+        toc, body_html = build_toc_and_body_html(self.body)
+        context["toc"] = toc
+        context["body_html"] = body_html
         return context
 
     def save(self, *args, **kwargs):
