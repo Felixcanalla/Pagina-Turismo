@@ -47,7 +47,7 @@
   <meta property="og:url" content="{{ page.full_url|default:abs_url }}">
 
   {# og:type correcto #}
-  {% if page.__class__.__name__ == "ArticuloPage" %}
+{% if page.content_type.model == "articulopage" %}
     <meta property="og:type" content="article">
   {% else %}
     <meta property="og:type" content="website">
