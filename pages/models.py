@@ -5,7 +5,7 @@ from django.db.models import Count
 from django.utils.html import format_html, strip_tags
 from django.utils.safestring import mark_safe
 from django.utils.text import slugify
-
+from .utils import build_toc_and_body_html, get_filtered_breadcrumb_ancestors
 import json
 
 from modelcluster.fields import ParentalKey
@@ -377,13 +377,16 @@ class DestinoPageTag(TaggedItemBase):
     )
 
 
+
+
+
 class DestinoPage(Page):
     template = "pages/destino_page.html"
-    seo_description = models.CharField(max_length=160, blank=True)
 
+    seo_description = models.CharField(max_length=160, blank=True)
     intro = models.CharField(max_length=250, blank=True)
 
-    tags = ClusterTaggableManager(through=DestinoPageTag, blank=True)
+    tags = ClusterTaggableManager(through="pages.DestinoPageTag", blank=True)
 
     hero_image = models.ForeignKey(
         "wagtailimages.Image",
@@ -391,6 +394,12 @@ class DestinoPage(Page):
         blank=True,
         on_delete=models.SET_NULL,
         related_name="+",
+    )
+
+    # ✅ Campo temporal para pegar HTML (Docs/Word)
+    contenido_bruto = models.TextField(
+        blank=True,
+        help_text="Pegá HTML (Docs/Word). Al guardar, se convierte a bloques automáticamente.",
     )
 
     body = StreamField(
@@ -432,6 +441,7 @@ class DestinoPage(Page):
     content_panels = Page.content_panels + [
         FieldPanel("intro"),
         FieldPanel("hero_image"),
+        FieldPanel("contenido_bruto"),  # ✅
         FieldPanel("body"),
         FieldPanel("tags"),
         MultiFieldPanel([FieldPanel("cta_manual")], heading="CTAs (Manual override)"),
@@ -450,6 +460,9 @@ class DestinoPage(Page):
     parent_page_types = ["pages.PaisPage"]
     subpage_types = []
 
+    # -------------------------
+    # FAQ helpers (sin cambios)
+    # -------------------------
     def get_faq_items(self):
         out = []
         faq_stream = getattr(self, "faq", None)
@@ -477,9 +490,6 @@ class DestinoPage(Page):
         return out
 
     def get_faq_jsonld(self):
-        """
-        Devuelve string JSON-LD (FAQPage) o "" si no hay FAQs.
-        """
         faqs = self.get_faq_items()
         if not faqs:
             return ""
@@ -499,18 +509,167 @@ class DestinoPage(Page):
                 for f in faqs
             ],
         }
-
         return mark_safe(json.dumps(data, ensure_ascii=False))
 
+    # -------------------------
+    # Import HTML -> StreamField
+    # -------------------------
+    def _looks_like_youtube(self, url: str) -> bool:
+        u = (url or "").lower()
+        return ("youtube.com" in u) or ("youtu.be" in u)
+
+    def _looks_like_maps(self, url: str) -> bool:
+        u = (url or "").lower()
+        return ("google.com/maps" in u) or ("/maps" in u)
+
+    def _clean_html_fragment(self, html: str) -> str:
+        return (html or "").strip()
+
+    def _html_to_stream_data_quicksections(self, html: str, fill_embed_urls: bool = True):
+        """
+        Importa HTML:
+        - Cada <h2> => 1 quick_section
+        - <p> + <h3> => body (HTML) dentro de quick_section.body
+        - primer <img> por sección => quick_section.image placeholder (None)
+        - imgs extra => bloque image placeholder
+        - iframes => bloque youtube/map (con src si fill_embed_urls=True o vacío si False)
+        - contenido antes del primer <h2> => rich_text suelto
+        """
+        soup = BeautifulSoup(html or "", "html.parser")
+        root = soup.body or soup
+
+        stream_data = []
+
+        current = None
+        section_chunks = []
+        section_has_image = False
+
+        def flush_current_section():
+            nonlocal current, section_chunks, section_has_image
+            if not current:
+                return
+
+            body_html = self._clean_html_fragment("".join(section_chunks))
+            current["body"] = body_html
+
+            stream_data.append({"type": "quick_section", "value": current})
+
+            current = None
+            section_chunks = []
+            section_has_image = False
+
+        def flush_intro_as_rich_text():
+            nonlocal section_chunks
+            if section_chunks:
+                combined = self._clean_html_fragment("".join(section_chunks))
+                if combined:
+                    stream_data.append({"type": "rich_text", "value": combined})
+                section_chunks = []
+
+        for node in root.descendants:
+            if not getattr(node, "name", None):
+                continue
+
+            tag = node.name.lower()
+            if tag in ("html", "head", "body", "div", "span"):
+                continue
+
+            if tag == "h2":
+                flush_current_section()
+                flush_intro_as_rich_text()
+
+                title = node.get_text(" ", strip=True)
+                if not title:
+                    continue
+
+                current = {
+                    "title": title,
+                    "subtitle": "",
+                    "body": "",
+                    "image": None,  # placeholder: elegir imagen luego
+                    "caption": "",
+                    "cta_text": "",
+                    "cta_url": "",
+                    "cta_note": "",
+                }
+                continue
+
+            # Antes del primer H2 => intro
+            if current is None:
+                if tag == "p":
+                    inner = node.decode_contents().strip()
+                    if inner and node.get_text(" ", strip=True):
+                        section_chunks.append(f"<p>{inner}</p>")
+                elif tag == "h3":
+                    text = node.get_text(" ", strip=True)
+                    if text:
+                        section_chunks.append(f"<h3>{text}</h3>")
+                continue
+
+            # Dentro de sección
+            if tag == "p":
+                inner = node.decode_contents().strip()
+                if not inner or node.get_text(" ", strip=True) == "":
+                    continue
+                section_chunks.append(f"<p>{inner}</p>")
+
+            elif tag == "h3":
+                text = node.get_text(" ", strip=True)
+                if text:
+                    section_chunks.append(f"<h3>{text}</h3>")
+
+            elif tag == "img":
+                if not section_has_image:
+                    current["image"] = None
+                    current["caption"] = ""
+                    section_has_image = True
+                else:
+                    stream_data.append({"type": "image", "value": {"image": None, "caption": ""}})
+
+            elif tag == "iframe":
+                src = node.get("src", "") or ""
+                if self._looks_like_youtube(src):
+                    stream_data.append(
+                        {
+                            "type": "youtube",
+                            "value": {"title": "", "video": (src if fill_embed_urls else "")},
+                        }
+                    )
+                elif self._looks_like_maps(src):
+                    stream_data.append(
+                        {
+                            "type": "map",
+                            "value": {"title": "", "map_url": (src if fill_embed_urls else "")},
+                        }
+                    )
+                else:
+                    safe = src.replace('"', "&quot;")
+                    section_chunks.append(
+                        f"<p>📌 Embed pendiente: <a href=\"{safe}\" target=\"_blank\" rel=\"noopener\">{safe}</a></p>"
+                    )
+
+        if current:
+            flush_current_section()
+        else:
+            flush_intro_as_rich_text()
+
+        return stream_data
+
+    def save(self, *args, **kwargs):
+        if self.contenido_bruto and self.contenido_bruto.strip() and (not self.body or len(self.body) == 0):
+            self.body = self._html_to_stream_data_quicksections(self.contenido_bruto, fill_embed_urls=True)
+            self.contenido_bruto = ""
+        super().save(*args, **kwargs)
+
+    # -------------------------
+    # Context (sin cambios)
+    # -------------------------
     def get_context(self, request, *args, **kwargs):
         context = super().get_context(request, *args, **kwargs)
-
         desired = 6
 
-        # ✅ Breadcrumbs filtrados (sin Welcome/Home)
         context["breadcrumb_ancestors"] = get_filtered_breadcrumb_ancestors(self)
 
-        # ✅ Relacionados por tags
         related = DestinoPage.objects.none()
         if self.tags.exists():
             tag_ids = list(self.tags.all().values_list("id", flat=True))
@@ -523,16 +682,9 @@ class DestinoPage(Page):
                 .distinct()
             )[:desired]
 
-        # ✅ Fallback: mismo país (hermanos)
         related_list = list(related)
         if len(related_list) < desired:
-            siblings = (
-                self.get_siblings()
-                .live()
-                .public()
-                .exclude(id=self.id)
-                .specific()
-            )
+            siblings = self.get_siblings().live().public().exclude(id=self.id).specific()
             existing_ids = {p.id for p in related_list}
             for s in siblings:
                 if s.id not in existing_ids:
@@ -543,7 +695,6 @@ class DestinoPage(Page):
 
         context["related_destinos"] = related_list
 
-        # ✅ CTAs: manual override > automático por tags
         if self.cta_manual and len(self.cta_manual):
             context["ctas"] = self.cta_manual
             context["ctas_source"] = "manual"
@@ -552,9 +703,7 @@ class DestinoPage(Page):
             ctas_auto = []
 
             def add_cta(title, url, button_text="Ver opciones", note=""):
-                ctas_auto.append(
-                    {"title": title, "url": url, "button_text": button_text, "note": note}
-                )
+                ctas_auto.append({"title": title, "url": url, "button_text": button_text, "note": note})
 
             if "playa" in tag_names:
                 add_cta("Alojamientos cerca de la playa", "https://www.booking.com/", "Ver alojamientos", "Compará precios y disponibilidad")
@@ -577,7 +726,6 @@ class DestinoPage(Page):
             if "presupuesto" in tag_names or "barato" in tag_names:
                 add_cta("Opciones económicas", "https://www.booking.com/", "Ver ofertas", "Ordená por precio y mirá reviews")
 
-            # Dedup
             seen = set()
             unique_ctas = []
             for cta in ctas_auto:
@@ -587,7 +735,6 @@ class DestinoPage(Page):
                 seen.add(key)
                 unique_ctas.append(cta)
 
-            # Fallback general
             if not unique_ctas:
                 unique_ctas = [
                     {"title": "Buscar alojamientos", "url": "https://www.booking.com/", "button_text": "Ver alojamientos", "note": "Compará opciones"},
@@ -600,7 +747,6 @@ class DestinoPage(Page):
         toc, body_html = build_toc_and_body_html(self.body)
         context["toc"] = toc
         context["body_html"] = body_html
-
         return context
 
     class Meta:
@@ -611,19 +757,10 @@ class DestinoPage(Page):
 # ARTÍCULO / GUÍA (con TOC)
 # ============================================================
 
+from bs4 import BeautifulSoup
+
 class ArticuloPage(Page):
-    template = "pages/articulo_page.html"
-    seo_description = models.CharField(max_length=160, blank=True)
-
-    intro = models.CharField(max_length=250, blank=True)
-
-    cover_image = models.ForeignKey(
-        "wagtailimages.Image",
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name="+",
-    )
+    contenido_bruto = models.TextField(blank=True)
 
     body = StreamField(
         [
@@ -642,38 +779,103 @@ class ArticuloPage(Page):
     )
 
     content_panels = Page.content_panels + [
-        FieldPanel("intro"),
-        FieldPanel("cover_image"),
+        FieldPanel("contenido_bruto"),
         FieldPanel("body"),
-        InlinePanel("destinos_relacionados", label="Destinos relacionados"),
     ]
 
-    promote_panels = Page.promote_panels + [
-        MultiFieldPanel([FieldPanel("seo_description")], heading="SEO"),
-    ]
+    def _html_to_stream_data(self, html: str):
+        soup = BeautifulSoup(html or "", "html.parser")
+        root = soup.body or soup
 
-    search_fields = Page.search_fields + [
-        index.SearchField("intro"),
-        index.SearchField("body"),
-    ]
+        stream_data = []
+        pending_paragraphs = []
 
-    parent_page_types = ["pages.CategoriaPage"]
-    subpage_types = []
+        def flush_paragraphs():
+            nonlocal pending_paragraphs
+            if pending_paragraphs:
+                combined = "".join(pending_paragraphs).strip()
+                if combined:
+                    stream_data.append({"type": "rich_text", "value": combined})
+                pending_paragraphs = []
 
-    class Meta:
-        verbose_name = "Artículo"
+        def looks_like_youtube(url: str) -> bool:
+            u = (url or "").lower()
+            return ("youtube.com" in u) or ("youtu.be" in u)
 
-    def get_context(self, request, *args, **kwargs):
-        context = super().get_context(request, *args, **kwargs)
+        # Recorremos tags “principales” en orden
+        for node in root.descendants:
+            if not getattr(node, "name", None):
+                continue
 
-        toc, body_html = build_toc_and_body_html(self.body)
-        context["toc"] = toc
-        context["body_html"] = body_html
+            tag = node.name.lower()
 
-        context["breadcrumb_ancestors"] = get_filtered_breadcrumb_ancestors(self)
+            # ignorar wrappers típicos
+            if tag in ("html", "head", "body", "div", "span"):
+                continue
 
-        return context
+            if tag == "h2":
+                flush_paragraphs()
+                title = node.get_text(" ", strip=True)
+                if title:
+                    stream_data.append({
+                        "type": "section_title",
+                        "value": {"title": title, "subtitle": ""}
+                    })
 
+            elif tag == "p":
+                inner_html = node.decode_contents().strip()
+                text = node.get_text(" ", strip=True)
+
+                # evitar <p><br></p> y vacíos
+                if not inner_html or text == "":
+                    continue
+
+                pending_paragraphs.append(f"<p>{inner_html}</p>")
+
+            elif tag == "img":
+                flush_paragraphs()
+
+                # Placeholder vacío: vos elegís la imagen luego
+                # (Opcional: guardar src original en caption)
+                # src = node.get("src", "")
+                # caption = f"Fuente original: {src}" if src else ""
+                caption = ""
+
+                stream_data.append({
+                    "type": "image",
+                    "value": {"image": None, "caption": caption}
+                })
+
+            elif tag == "iframe":
+                flush_paragraphs()
+                src = node.get("src", "")
+
+                if looks_like_youtube(src):
+                    # Placeholder vacío: vos pegás URL luego
+                    stream_data.append({
+                        "type": "youtube",
+                        "value": {"title": "", "video": ""}  # requiere video required=False
+                    })
+                else:
+                    # No tenés bloque map/embed en body: lo dejamos como nota en rich_text
+                    note = "📌 Aquí iba un iframe (maps u otro embed). Pegá la URL manualmente: "
+                    safe_src = src.replace('"', "&quot;")
+                    stream_data.append({
+                        "type": "rich_text",
+                        "value": f"<p>{note}<a href=\"{safe_src}\" target=\"_blank\" rel=\"noopener\">{safe_src}</a></p>"
+                    })
+
+        flush_paragraphs()
+        return stream_data
+
+    def save(self, *args, **kwargs):
+        if self.contenido_bruto and self.contenido_bruto.strip():
+            self.body = self._html_to_stream_data(self.contenido_bruto)
+
+            # para no reimportar cada vez
+            self.contenido_bruto = ""
+
+        super().save(*args, **kwargs)
 
 class ArticuloDestinoRelation(Orderable):
     articulo = ParentalKey(

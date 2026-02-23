@@ -17,7 +17,7 @@ class SectionTitleBlock(blocks.StructBlock):
 
 
 class ImageBlock(blocks.StructBlock):
-    image = ImageChooserBlock(required=True)
+    image = ImageChooserBlock(required=False)
     caption = blocks.CharBlock(required=False, max_length=180)
 
     class Meta:
@@ -70,7 +70,7 @@ class InfoGridBlock(blocks.StructBlock):
 
 class MapEmbedBlock(blocks.StructBlock):
     title = blocks.CharBlock(required=False, max_length=80)
-    map_url = blocks.URLBlock(required=True, help_text="Pegá la URL /maps/embed?... (NO el iframe completo)")
+    map_url = blocks.URLBlock(required=False, help_text="Pegá la URL /maps/embed?... (NO el iframe completo)")
 
     class Meta:
         icon = "site"
@@ -89,7 +89,7 @@ class CTAButtonBlock(blocks.StructBlock):
 
 class YouTubeBlock(blocks.StructBlock):
     title = blocks.CharBlock(required=False, max_length=80)
-    video = EmbedBlock(required=True, help_text="Pegá el link de YouTube (o cualquier embed compatible)")
+    video = EmbedBlock(required=False, help_text="Pegá el link de YouTube (o cualquier embed compatible)")
 
     class Meta:
         icon = "media"
