@@ -5,7 +5,6 @@ from django.db.models import Count
 from django.utils.html import format_html, strip_tags
 from django.utils.safestring import mark_safe
 from django.utils.text import slugify
-from .utils import build_toc_and_body_html, get_filtered_breadcrumb_ancestors
 import json
 
 from modelcluster.fields import ParentalKey
@@ -17,6 +16,7 @@ from wagtail.admin.panels import FieldPanel, InlinePanel, MultiFieldPanel, PageC
 from wagtail.fields import RichTextField, StreamField
 from wagtail.models import Orderable, Page
 from wagtail.rich_text import RichText
+from bs4 import BeautifulSoup
 from wagtail.search import index
 
 from .blocks import (
@@ -743,10 +743,13 @@ class DestinoPage(Page):
 # ARTÍCULO / GUÍA (con TOC)
 # ============================================================
 
-from bs4 import BeautifulSoup
 
 class ArticuloPage(Page):
-    contenido_bruto = models.TextField(blank=True)
+    contenido_bruto = models.TextField(
+        blank=True,
+        default="",
+        help_text="Pegá HTML (Docs/Word). Al guardar, se convierte a bloques automáticamente.",
+    )
 
     body = StreamField(
         [
@@ -755,6 +758,7 @@ class ArticuloPage(Page):
             ("image", ImageBlock()),
             ("gallery", GalleryBlock()),
             ("highlights", HighlightsBlock()),
+            ("map", MapEmbedBlock()),  # ✅ agregado
             ("youtube", YouTubeBlock()),
             ("cta", CTAButtonBlock()),
             ("quick_sections", QuickSectionsBlock()),
@@ -769,7 +773,15 @@ class ArticuloPage(Page):
         FieldPanel("body"),
     ]
 
-    def _html_to_stream_data(self, html: str):
+    def _looks_like_youtube(self, url: str) -> bool:
+        u = (url or "").lower()
+        return ("youtube.com" in u) or ("youtu.be" in u)
+
+    def _looks_like_maps(self, url: str) -> bool:
+        u = (url or "").lower()
+        return ("google.com/maps" in u) or ("/maps" in u)
+
+    def _html_to_stream_data(self, html: str, fill_embed_urls: bool = True):
         soup = BeautifulSoup(html or "", "html.parser")
         root = soup.body or soup
 
@@ -778,24 +790,19 @@ class ArticuloPage(Page):
 
         def flush_paragraphs():
             nonlocal pending_paragraphs
-            if pending_paragraphs:
-                combined = "".join(pending_paragraphs).strip()
-                if combined:
-                    stream_data.append({"type": "rich_text", "value": combined})
-                pending_paragraphs = []
+            if not pending_paragraphs:
+                return
+            combined = "".join(pending_paragraphs).strip()
+            if combined:
+                stream_data.append({"type": "rich_text", "value": combined})
+            pending_paragraphs = []
 
-        def looks_like_youtube(url: str) -> bool:
-            u = (url or "").lower()
-            return ("youtube.com" in u) or ("youtu.be" in u)
-
-        # Recorremos tags “principales” en orden
         for node in root.descendants:
             if not getattr(node, "name", None):
                 continue
 
             tag = node.name.lower()
 
-            # ignorar wrappers típicos
             if tag in ("html", "head", "body", "div", "span"):
                 continue
 
@@ -803,64 +810,56 @@ class ArticuloPage(Page):
                 flush_paragraphs()
                 title = node.get_text(" ", strip=True)
                 if title:
-                    stream_data.append({
-                        "type": "section_title",
-                        "value": {"title": title, "subtitle": ""}
-                    })
+                    stream_data.append(
+                        {"type": "section_title", "value": {"title": title, "subtitle": ""}}
+                    )
 
             elif tag == "p":
-                inner_html = node.decode_contents().strip()
+                inner_html = (node.decode_contents() or "").strip()
                 text = node.get_text(" ", strip=True)
-
-                # evitar <p><br></p> y vacíos
                 if not inner_html or text == "":
                     continue
-
                 pending_paragraphs.append(f"<p>{inner_html}</p>")
 
             elif tag == "img":
                 flush_paragraphs()
-
-                # Placeholder vacío: vos elegís la imagen luego
-                # (Opcional: guardar src original en caption)
-                # src = node.get("src", "")
-                # caption = f"Fuente original: {src}" if src else ""
-                caption = ""
-
-                stream_data.append({
-                    "type": "image",
-                    "value": {"image": None, "caption": caption}
-                })
+                stream_data.append({"type": "image", "value": {"image": None, "caption": ""}})
 
             elif tag == "iframe":
                 flush_paragraphs()
-                src = node.get("src", "")
+                src = (node.get("src") or "").strip()
 
-                if looks_like_youtube(src):
-                    # Placeholder vacío: vos pegás URL luego
-                    stream_data.append({
-                        "type": "youtube",
-                        "value": {"title": "", "video": ""}  # requiere video required=False
-                    })
+                if self._looks_like_youtube(src):
+                    # ✅ youtube: placeholder o autocompletado
+                    stream_data.append(
+                        {"type": "youtube", "value": {"title": "", "video": (src if fill_embed_urls else "")}}
+                    )
+
+                elif self._looks_like_maps(src):
+                    # ✅ maps: placeholder o autocompletado
+                    # Tu MapEmbedBlock pide /maps/embed?... (src suele ser eso)
+                    stream_data.append(
+                        {"type": "map", "value": {"title": "", "map_url": (src if fill_embed_urls else "")}}
+                    )
+
                 else:
-                    # No tenés bloque map/embed en body: lo dejamos como nota en rich_text
-                    note = "📌 Aquí iba un iframe (maps u otro embed). Pegá la URL manualmente: "
                     safe_src = src.replace('"', "&quot;")
-                    stream_data.append({
-                        "type": "rich_text",
-                        "value": f"<p>{note}<a href=\"{safe_src}\" target=\"_blank\" rel=\"noopener\">{safe_src}</a></p>"
-                    })
+                    note = "📌 Aquí iba un iframe (maps u otro embed). Pegá la URL manualmente: "
+                    stream_data.append(
+                        {
+                            "type": "rich_text",
+                            "value": f"<p>{note}<a href=\"{safe_src}\" target=\"_blank\" rel=\"noopener\">{safe_src}</a></p>",
+                        }
+                    )
 
         flush_paragraphs()
         return stream_data
 
     def save(self, *args, **kwargs):
-        if self.contenido_bruto and self.contenido_bruto.strip():
-            self.body = self._html_to_stream_data(self.contenido_bruto)
-
-            # para no reimportar cada vez
+        # ✅ Guard-rail: no pisa body si ya tiene contenido
+        if self.contenido_bruto and self.contenido_bruto.strip() and (not self.body or len(self.body) == 0):
+            self.body = self._html_to_stream_data(self.contenido_bruto, fill_embed_urls=True)
             self.contenido_bruto = ""
-
         super().save(*args, **kwargs)
 
 class ArticuloDestinoRelation(Orderable):

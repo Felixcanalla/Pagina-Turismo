@@ -6,17 +6,40 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('pages', '0029_alter_articulopage_options_and_more'),
+        ("pages", "0029_alter_articulopage_options_and_more"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='destinopage',
-            name='contenido_bruto',
+            model_name="destinopage",
+            name="contenido_bruto",
         ),
-        migrations.AddField(
-            model_name='destinopage',
-            name='bulk_paste',
-            field=models.TextField(blank=True, default='', help_text='Pegá HTML (Docs/Word). Al guardar, se convierte a bloques automáticamente.'),
+
+        migrations.SeparateDatabaseAndState(
+            # ✅ DB: crear la columna solo si no existe (evita DuplicateColumn en Render)
+            database_operations=[
+                migrations.RunSQL(
+                    sql="""
+                        ALTER TABLE pages_destinopage
+                        ADD COLUMN IF NOT EXISTS bulk_paste text NOT NULL DEFAULT '';
+                    """,
+                    reverse_sql="""
+                        ALTER TABLE pages_destinopage
+                        DROP COLUMN IF EXISTS bulk_paste;
+                    """,
+                ),
+            ],
+            # ✅ Estado Django: el modelo tiene el campo bulk_paste
+            state_operations=[
+                migrations.AddField(
+                    model_name="destinopage",
+                    name="bulk_paste",
+                    field=models.TextField(
+                        blank=True,
+                        default="",
+                        help_text="Pegá HTML (Docs/Word). Al guardar, se convierte a bloques automáticamente.",
+                    ),
+                ),
+            ],
         ),
     ]
