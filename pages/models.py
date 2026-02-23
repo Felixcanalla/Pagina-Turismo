@@ -873,7 +873,7 @@ class ArticuloPage(Page):
         return context
 
     def save(self, *args, **kwargs):
-        # Si pegaste algo, siempre lo convertimos y vaciamos bulk_paste
+        # Si pegaste algo, lo convertimos y vaciamos
         if self.bulk_paste and self.bulk_paste.strip():
             self.body = self._html_to_stream_data(self.bulk_paste, fill_embed_urls=True)
             self.bulk_paste = ""

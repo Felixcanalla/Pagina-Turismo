@@ -3,6 +3,27 @@
 from django.db import migrations, models
 
 
+def add_bulk_paste_postgres(apps, schema_editor):
+    # En local (SQLite): no hacemos nada, Django lo crea por AddField en state_operations
+    if schema_editor.connection.vendor != "postgresql":
+        return
+
+    schema_editor.execute("""
+        ALTER TABLE pages_destinopage
+        ADD COLUMN IF NOT EXISTS bulk_paste text NOT NULL DEFAULT '';
+    """)
+
+
+def drop_bulk_paste_postgres(apps, schema_editor):
+    if schema_editor.connection.vendor != "postgresql":
+        return
+
+    schema_editor.execute("""
+        ALTER TABLE pages_destinopage
+        DROP COLUMN IF EXISTS bulk_paste;
+    """)
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -16,20 +37,12 @@ class Migration(migrations.Migration):
         ),
 
         migrations.SeparateDatabaseAndState(
-            # ✅ DB: crear la columna solo si no existe (evita DuplicateColumn en Render)
             database_operations=[
-                migrations.RunSQL(
-                    sql="""
-                        ALTER TABLE pages_destinopage
-                        ADD COLUMN IF NOT EXISTS bulk_paste text NOT NULL DEFAULT '';
-                    """,
-                    reverse_sql="""
-                        ALTER TABLE pages_destinopage
-                        DROP COLUMN IF EXISTS bulk_paste;
-                    """,
+                migrations.RunPython(
+                    add_bulk_paste_postgres,
+                    reverse_code=drop_bulk_paste_postgres,
                 ),
             ],
-            # ✅ Estado Django: el modelo tiene el campo bulk_paste
             state_operations=[
                 migrations.AddField(
                     model_name="destinopage",
