@@ -397,8 +397,10 @@ class DestinoPage(Page):
     )
 
     # ✅ Campo temporal para pegar HTML (Docs/Word)
-    contenido_bruto = models.TextField(
+    # IMPORTANTE: el nombre debe coincidir con la columna real en DB: bulk_paste
+    bulk_paste = models.TextField(
         blank=True,
+        default="",  # ✅ evita NULL en Postgres
         help_text="Pegá HTML (Docs/Word). Al guardar, se convierte a bloques automáticamente.",
     )
 
@@ -420,28 +422,13 @@ class DestinoPage(Page):
         blank=True,
     )
 
-    # ✅ CTAs manuales (override)
-    cta_manual = StreamField(
-        [
-            ("cta", CTAButtonBlock()),
-        ],
-        use_json_field=True,
-        blank=True,
-    )
-
-    # ✅ FAQ dinámico PRO
-    faq = StreamField(
-        [
-            ("faq", FAQBlock()),
-        ],
-        use_json_field=True,
-        blank=True,
-    )
+    cta_manual = StreamField([("cta", CTAButtonBlock())], use_json_field=True, blank=True)
+    faq = StreamField([("faq", FAQBlock())], use_json_field=True, blank=True)
 
     content_panels = Page.content_panels + [
         FieldPanel("intro"),
         FieldPanel("hero_image"),
-        FieldPanel("contenido_bruto"),  # ✅
+        FieldPanel("bulk_paste"),  # ✅
         FieldPanel("body"),
         FieldPanel("tags"),
         MultiFieldPanel([FieldPanel("cta_manual")], heading="CTAs (Manual override)"),
@@ -656,9 +643,9 @@ class DestinoPage(Page):
         return stream_data
 
     def save(self, *args, **kwargs):
-        if self.contenido_bruto and self.contenido_bruto.strip() and (not self.body or len(self.body) == 0):
-            self.body = self._html_to_stream_data_quicksections(self.contenido_bruto, fill_embed_urls=True)
-            self.contenido_bruto = ""
+        if self.bulk_paste and self.bulk_paste.strip() and (not self.body or len(self.body) == 0):
+            self.body = self._html_to_stream_data_quicksections(self.bulk_paste, fill_embed_urls=True)
+            self.bulk_paste = ""
         super().save(*args, **kwargs)
 
     # -------------------------
