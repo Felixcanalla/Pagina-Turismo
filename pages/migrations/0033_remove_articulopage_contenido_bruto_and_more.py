@@ -3,20 +3,56 @@
 from django.db import migrations, models
 
 
+def add_bulk_paste_postgres(apps, schema_editor):
+    # En SQLite (local) no hace falta, Django ya crea la columna con state_operations.
+    if schema_editor.connection.vendor != "postgresql":
+        return
+
+    schema_editor.execute("""
+        ALTER TABLE pages_articulopage
+        ADD COLUMN IF NOT EXISTS bulk_paste text NOT NULL DEFAULT '';
+    """)
+
+
+def drop_bulk_paste_postgres(apps, schema_editor):
+    if schema_editor.connection.vendor != "postgresql":
+        return
+
+    schema_editor.execute("""
+        ALTER TABLE pages_articulopage
+        DROP COLUMN IF EXISTS bulk_paste;
+    """)
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('pages', '0032_ensure_bulk_paste'),
+        ("pages", "0032_ensure_bulk_paste"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='articulopage',
-            name='contenido_bruto',
+            model_name="articulopage",
+            name="contenido_bruto",
         ),
-        migrations.AddField(
-            model_name='articulopage',
-            name='bulk_paste',
-            field=models.TextField(blank=True, default='', help_text='Pegá HTML (Docs/Word). Al guardar, se convierte a bloques automáticamente.'),
+
+        migrations.SeparateDatabaseAndState(
+            database_operations=[
+                migrations.RunPython(
+                    add_bulk_paste_postgres,
+                    reverse_code=drop_bulk_paste_postgres,
+                ),
+            ],
+            state_operations=[
+                migrations.AddField(
+                    model_name="articulopage",
+                    name="bulk_paste",
+                    field=models.TextField(
+                        blank=True,
+                        default="",
+                        help_text="Pegá HTML (Docs/Word). Al guardar, se convierte a bloques automáticamente.",
+                    ),
+                ),
+            ],
         ),
     ]
