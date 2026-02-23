@@ -30,8 +30,7 @@
       {% endif %}
     </div>
 
-    {# cover_image no existe en tu ArticuloPage actual.
-       Si querés imagen de portada, agregá cover_image al modelo o eliminá este bloque. #}
+    
     {% if page.cover_image %}
       {% image page.cover_image fill-1600x700 class="hero-img" %}
     {% endif %}
@@ -52,8 +51,7 @@
     {% endif %}
 
     <div class="content post__body">
-      {# Si aplicás el fix recomendado: en get_context() generás body_html con build_toc_and_body_html(self.body)
-         y renderizás directamente el HTML ya con <h2 id="..."> que coincide con el TOC. #}
+      
       {% if body_html %}
         {{ body_html }}
       {% elif page.body %}
