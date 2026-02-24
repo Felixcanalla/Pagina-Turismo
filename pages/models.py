@@ -776,6 +776,7 @@ class ArticuloPage(Page):
     content_panels = Page.content_panels + [
         FieldPanel("bulk_paste"),
         FieldPanel("body"),
+        InlinePanel("destinos_relacionados", label="Destinos relacionados"),
     ]
 
     template = "pages/articulo_page.html"
