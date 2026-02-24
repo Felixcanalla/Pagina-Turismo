@@ -1265,3 +1265,271 @@ li{ margin:6px 0; }
 @media (prefers-reduced-motion: reduce){
   .toc__link{ transition:none !important; }
 }
+
+
+
+/* =========================================================
+   DESTINOS POSIBLES — Refinamientos (FAQ / CTA / TOC)
+   Pegá al FINAL del CSS para override
+   ========================================================= */
+
+/* ---------- A) TOC: más editorial, menos "link azul subrayado" ---------- */
+.dp-toc{
+  background: rgba(255,255,255,.92);
+  border: 1px solid rgba(0,0,0,.06);
+  box-shadow: 0 12px 28px rgba(0,0,0,.04);
+  padding: 16px;
+}
+
+.dp-toc h3{
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: rgba(38,70,83,.85);
+  margin-bottom: 12px;
+}
+
+/* Quitar subrayado y estilo "link" */
+.dp-toc a{
+  text-decoration: none;
+  color: rgba(17,24,39,.86);
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.35;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: transparent;
+  position: relative;
+}
+
+/* Hover suave */
+.dp-toc a:hover{
+  background: rgba(231,111,81,.08);
+  border-color: rgba(231,111,81,.14);
+}
+
+/* Activo: barrita lateral + tono petróleo */
+.dp-toc a.is-active{
+  font-weight: 800;
+  color: var(--dp-title);
+  background: rgba(231,111,81,.10);
+  border-color: rgba(231,111,81,.20);
+}
+
+.dp-toc a.is-active::before{
+  content:"";
+  position: absolute;
+  left: 8px;
+  top: 10px;
+  bottom: 10px;
+  width: 3px;
+  border-radius: 999px;
+  background: var(--dp-accent);
+}
+
+/* Separación de items */
+.dp-toc ul{ gap: 8px; }
+
+/* ---------- B) CTA / Recomendaciones: menos "botón azul gigante" ---------- */
+/* Si tu contenedor actual es .cta-stack, lo refinamos sin tocar HTML */
+.cta-stack{
+  background: rgba(255,255,255,.92);
+  border: 1px solid rgba(0,0,0,.06);
+  box-shadow: 0 12px 28px rgba(0,0,0,.04);
+  border-radius: 16px;
+  padding: 16px;
+}
+
+/* Título del bloque */
+.cta-stack h2{
+  font-family: "Playfair Display", Georgia, serif;
+  color: var(--dp-title);
+  font-size: 20px;
+  margin: 0 0 12px;
+}
+
+/* Cada CTA (si tu bloque usa .block-cta ya) */
+.block-cta{
+  background: linear-gradient(180deg, rgba(231,111,81,.10) 0%, rgba(231,111,81,.06) 100%);
+  border: 1px solid rgba(231,111,81,.18);
+  border-radius: 16px;
+  padding: 14px;
+  text-align: left;
+}
+
+/* Botón: coral, no azul */
+.block-cta .btn{
+  background: var(--dp-accent);
+  color: #fff;
+  border: 0;
+  border-radius: 999px;
+  padding: 10px 14px;
+  font-weight: 800;
+  width: auto;            /* <-- clave: que no ocupe el 100% */
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.block-cta .btn:hover{
+  transform: translateY(-1px);
+  filter: brightness(.97);
+}
+
+.block-cta .btn::after{
+  content:"→";
+  font-weight: 900;
+}
+
+/* Nota debajo (más pequeña y elegante) */
+.block-cta .cta-note{
+  margin-top: 8px;
+  font-size: 13px;
+  color: rgba(17,24,39,.68);
+}
+
+/* ---------- C) FAQ: estilo acordeón revista ---------- */
+/* Necesito saber tu markup exacto, pero por la captura parece <details><summary> */
+.post__body details,
+.dp-prose details,
+.content details{
+  border: 1px solid rgba(0,0,0,.06);
+  background: rgba(255,255,255,.92);
+  border-radius: 14px;
+  padding: 0;
+  box-shadow: 0 10px 24px rgba(0,0,0,.035);
+  margin: 10px 0;
+  overflow: hidden;
+}
+
+/* Quitar el triángulo default */
+.post__body summary,
+.dp-prose summary,
+.content summary{
+  list-style: none;
+  cursor: pointer;
+  padding: 14px 16px;
+  font-weight: 800;
+  color: var(--dp-title);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.post__body summary::-webkit-details-marker,
+.dp-prose summary::-webkit-details-marker,
+.content summary::-webkit-details-marker{
+  display: none;
+}
+
+/* Ícono “+” / “–” */
+.post__body summary::after,
+.dp-prose summary::after,
+.content summary::after{
+  content: "+";
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: rgba(38,70,83,.08);
+  color: rgba(38,70,83,.9);
+  flex: 0 0 auto;
+  font-weight: 900;
+}
+
+.post__body details[open] summary::after,
+.dp-prose details[open] summary::after,
+.content details[open] summary::after{
+  content: "–";
+  background: rgba(231,111,81,.14);
+  color: var(--dp-accent);
+}
+
+/* Contenido del FAQ */
+.post__body details > *:not(summary),
+.dp-prose details > *:not(summary),
+.content details > *:not(summary){
+  padding: 0 16px 14px 16px;
+  color: rgba(17,24,39,.80);
+  line-height: 1.7;
+}
+
+/* Separación en FAQ (si hay un h2 arriba) */
+.post__body h2 + details,
+.dp-prose h2 + details,
+.content h2 + details{
+  margin-top: 14px;
+}
+
+
+@media (max-width: 992px){
+  .dp-toc{
+    position: relative;
+    top: auto;
+    max-height: none;
+  }
+}
+
+
+/* =========================================================
+   CTA Block — Destinos Posibles (override del HTML actual)
+   ========================================================= */
+
+.block.block-cta{
+  background: linear-gradient(180deg, rgba(231,111,81,.10) 0%, rgba(231,111,81,.06) 100%);
+  border: 1px solid rgba(231,111,81,.18);
+  border-radius: 16px;
+  padding: 16px;
+  text-align: left;
+  box-shadow: 0 10px 24px rgba(0,0,0,.04);
+}
+
+/* Matar el look bootstrap azul SOLO en este bloque */
+.block.block-cta .btn.btn-primary{
+  background: #E76F51;
+  border-color: #E76F51;
+  color: #fff;
+  border-radius: 999px;
+  font-weight: 800;
+  padding: 10px 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  width: auto;              /* clave: no full width */
+  box-shadow: 0 10px 20px rgba(231,111,81,.18);
+}
+
+/* Hover más “magazine” */
+.block.block-cta .btn.btn-primary:hover{
+  filter: brightness(.97);
+  transform: translateY(-1px);
+}
+
+/* Flecha editorial */
+.block.block-cta .btn.btn-primary::after{
+  content: "→";
+  font-weight: 900;
+}
+
+/* Nota más fina */
+.block.block-cta .cta-note{
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: rgba(17,24,39,.68);
+  line-height: 1.5;
+}
+
+
+.block.block-cta .cta-kicker{
+  margin: 0 0 10px;
+  font-size: 12px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: rgba(38,70,83,.85);
+  font-weight: 800;
+}
