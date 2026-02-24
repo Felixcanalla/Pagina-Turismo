@@ -591,3 +591,16 @@ a:hover{ filter: brightness(.95); }
 
 .faq-answer p{ margin: 0 0 10px; }
 .faq-answer p:last-child{ margin-bottom: 0; }
+
+
+
+.toc__link,
+.toc__link:visited,
+.toc__link:hover,
+.toc__link:active{
+  text-decoration: none;
+}
+
+.toc__link.is-active{
+  text-decoration: none;
+}
