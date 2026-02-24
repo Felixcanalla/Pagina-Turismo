@@ -5,9 +5,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  {# Fonts: Inter (body) + Playfair Display (headings) #}
   <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
 
   {# ✅ SEO/OG/Twitter centralizado (sin duplicados) #}
   {% include "partials/seo_meta.html" %}
@@ -17,15 +19,18 @@
 
   <link rel="icon" href="{% static 'img/favicon.ico' %}">
   <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+  <link rel="stylesheet" href="{% static 'css/dp-magazine.css' %}">
 </head>
 
 <body id="top">
-  <header class="site-header">
+
+  {# Navbar (Bootstrap-like behavior + dp navbar states) #}
+  <header class="site-header dp-navbar dp-navbar--top">
     <div class="container">
       <div class="nav">
-        <a class="brand" href="/">{{ site_name|default:"Guía de Viajes" }}</a>
+        <a class="brand" href="/">{{ site_name|default:"Destinos Posibles" }}</a>
 
-        <nav class="nav-links">
+        <nav class="nav-links" aria-label="Navegación principal">
           <a href="/">Inicio</a>
           <a href="/destinos/">Destinos</a>
           <a href="/guias/">Guías</a>
@@ -46,7 +51,7 @@
     <div class="container">
       <div class="footer-grid">
         <div class="footer-brand">
-          <a class="footer-logo" href="/">Turismo</a>
+          <a class="footer-logo" href="/">Destinos Posibles</a>
           <p class="footer-text">
             Guías y destinos para planear tu próximo viaje. Contenido editorial creado desde nuestro CMS.
           </p>
@@ -78,7 +83,6 @@
           </ul>
 
           <div class="footer-social">
-            {# Reemplazá los href con tus URLs reales #}
             <a class="social" href="https://www.instagram.com/" target="_blank" rel="noopener" aria-label="Instagram">
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5zm10 2H7a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3zm-5 3.5A4.5 4.5 0 1 1 7.5 12 4.51 4.51 0 0 1 12 7.5zm0 2A2.5 2.5 0 1 0 14.5 12 2.5 2.5 0 0 0 12 9.5zm4.75-2.25a1 1 0 1 1-1 1 1 1 0 0 1 1-1z"/>
@@ -101,7 +105,7 @@
       </div>
 
       <div class="footer-bottom">
-        <span>© <span id="year"></span> Turismo. Todos los derechos reservados.</span>
+        <span>© <span id="year"></span> Destinos Posibles. Todos los derechos reservados.</span>
 
         <span class="footer-madeby">
           Hecho por <a href="#" target="_blank" rel="noopener">Patricio Migone / HDFelix</a>
@@ -112,45 +116,17 @@
     </div>
   </footer>
 
+  {# JS al final del body (mejor performance) #}
+  <script src="{% static 'js/dp-ui.js' %}"></script>
+
   <script>
     // Año automático (solo 1 vez)
     const y = document.getElementById("year");
     if (y) y.textContent = new Date().getFullYear();
   </script>
 
-  {# TOC: resalta sección activa (solo si hay TOC) #}
-  <script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const tocLinks = Array.from(document.querySelectorAll(".toc__link"));
-    if (!tocLinks.length) return;
-
-    const targets = tocLinks
-      .map(a => document.getElementById(a.getAttribute("href").slice(1)))
-      .filter(Boolean);
-
-    if (!targets.length) return;
-
-    const setActive = (id) => {
-      tocLinks.forEach(a => {
-        a.classList.toggle("is-active", a.getAttribute("href") === "#" + id);
-      });
-    };
-
-    const observer = new IntersectionObserver((entries) => {
-      const visible = entries
-        .filter(e => e.isIntersecting)
-        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-
-      if (visible) setActive(visible.target.id);
-    }, {
-      threshold: [0.2, 0.4, 0.6],
-      rootMargin: "-10% 0px -70% 0px"
-    });
-
-    targets.forEach(t => observer.observe(t));
-    setActive(targets[0].id);
-  });
-  </script>
+  {# ✅ Eliminado: el script TOC duplicado.
+     dp-ui.js ya maneja navbar + toc active. #}
 
 </body>
 </html>

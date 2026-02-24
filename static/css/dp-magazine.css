@@ -1,0 +1,372 @@
+/* =========================================================
+   Destinos Posibles — Magazine UI Kit (Bootstrap 5 + Wagtail)
+   Drop-in CSS (load AFTER Bootstrap + your current CSS)
+   ========================================================= */
+
+/* -----------------------------
+   1) Tokens / Palette
+------------------------------ */
+:root{
+  --dp-bg: #fcfcfc;
+  --dp-accent: #E76F51;         /* coral / tierra */
+  --dp-title: #264653;          /* azul petróleo */
+  --dp-text: #111827;
+  --dp-muted: #6b7280;
+  --dp-border: rgba(0,0,0,.08);
+  --dp-shadow: 0 10px 30px rgba(0,0,0,0.05);
+  --dp-radius: 15px;
+}
+
+/* -----------------------------
+   2) Base & Typography
+------------------------------ */
+html{ scroll-behavior:smooth; }
+body{
+  background: var(--dp-bg);
+  color: var(--dp-text);
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  line-height: 1.7;
+}
+
+/* Headings: Playfair Display */
+h1, h2, h3, h4, h5, h6{
+  font-family: "Playfair Display", Georgia, "Times New Roman", serif;
+  color: var(--dp-title);
+  letter-spacing: -0.2px;
+}
+
+a{
+  color: var(--dp-accent);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+a:hover{ filter: brightness(.95); }
+
+/* Reading container: max 800px centered */
+.dp-reading{
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* Wagtail article body helper (use on container that wraps article content) */
+.dp-prose p{ margin: 0 0 1rem; color: rgba(17,24,39,.92); }
+.dp-prose h2{ font-size: 2rem; line-height: 1.2; margin: 2.2rem 0 .8rem; }
+.dp-prose h3{ font-size: 1.35rem; line-height: 1.25; margin: 1.4rem 0 .6rem; }
+.dp-prose ul, .dp-prose ol{ margin: 0 0 1rem; padding-left: 1.25rem; }
+.dp-prose li{ margin: .25rem 0; }
+
+/* -----------------------------
+   3) Images (Article + Cards)
+------------------------------ */
+.dp-prose img,
+.dp-media img,
+.dp-prose figure img{
+  width: 100%;
+  height: auto;
+  border-radius: var(--dp-radius);
+  box-shadow: var(--dp-shadow);
+  margin: 1rem 0 1.5rem;
+  border: 1px solid var(--dp-border);
+  display: block;
+}
+
+/* Bootstrap images inside Wagtail blocks */
+.dp-prose .richtext-image,
+.dp-prose .image img{
+  border-radius: var(--dp-radius);
+  box-shadow: var(--dp-shadow);
+}
+
+/* -----------------------------
+   4) Tables: Budget style (responsive)
+------------------------------ */
+.dp-table{
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: var(--dp-radius);
+  overflow: hidden;
+  box-shadow: var(--dp-shadow);
+  border: 1px solid var(--dp-border);
+  background: #fff;
+}
+
+.dp-table thead th{
+  background: var(--dp-title);
+  color: #fff;
+  font-weight: 700;
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  letter-spacing: 0.1px;
+  padding: 12px 14px;
+  border: 0;
+}
+
+.dp-table tbody td{
+  padding: 12px 14px;
+  border-top: 1px solid rgba(0,0,0,.06);
+  vertical-align: top;
+  color: rgba(17,24,39,.90);
+}
+
+.dp-table tbody tr:nth-child(even) td{
+  background: rgba(38,70,83,.03);
+}
+
+/* Wrap table to allow horizontal scroll on mobile */
+.dp-table-wrap{
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 1rem 0 1.5rem;
+  border-radius: var(--dp-radius);
+}
+
+/* -----------------------------
+   5) Tip box: "Tips de Ahorro"
+------------------------------ */
+.tip-posible{
+  background: #FFF6D6; /* amarillo muy pálido */
+  border-left: 6px solid var(--dp-accent);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin: 1rem 0 1.5rem;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.04);
+  position: relative;
+}
+
+.tip-posible .tip-title{
+  font-weight: 800;
+  margin: 0 0 6px;
+  color: var(--dp-title);
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+/* Icon (works with Bootstrap Icons if loaded) */
+.tip-posible .tip-icon{
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: rgba(231,111,81,.14);
+  color: var(--dp-accent);
+  margin-right: 10px;
+  flex: 0 0 auto;
+}
+
+.tip-posible .tip-row{
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.tip-posible p{ margin: 0; }
+
+/* -----------------------------
+   6) Buttons/Links accent
+------------------------------ */
+.btn-dp{
+  background: var(--dp-accent);
+  border-color: var(--dp-accent);
+  color: #fff;
+  border-radius: 999px;
+  font-weight: 700;
+  padding: .6rem 1rem;
+}
+.btn-dp:hover{
+  filter: brightness(.96);
+  color: #fff;
+}
+
+/* -----------------------------
+   7) Navbar: transparent -> solid on scroll
+   (Add .dp-navbar to your navbar)
+------------------------------ */
+.dp-navbar{
+  transition: background-color .2s ease, box-shadow .2s ease, color .2s ease;
+  background: transparent;
+  box-shadow: none;
+}
+
+.dp-navbar.dp-navbar--solid{
+  background: rgba(255,255,255,.96);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+}
+
+/* Text color switch */
+.dp-navbar .navbar-brand,
+.dp-navbar .nav-link{
+  transition: color .2s ease;
+}
+
+/* Top state (on hero image): white text */
+.dp-navbar.dp-navbar--top .navbar-brand,
+.dp-navbar.dp-navbar--top .nav-link{
+  color: rgba(255,255,255,.96) !important;
+}
+.dp-navbar.dp-navbar--top .nav-link:hover{ color: #fff !important; }
+
+/* Solid state: dark text */
+.dp-navbar.dp-navbar--solid .navbar-brand,
+.dp-navbar.dp-navbar--solid .nav-link{
+  color: rgba(17,24,39,.92) !important;
+}
+.dp-navbar.dp-navbar--solid .nav-link:hover{
+  color: var(--dp-accent) !important;
+}
+
+/* Navbar toggler icon visibility (Bootstrap default may be dark) */
+.dp-navbar.dp-navbar--top .navbar-toggler{
+  border-color: rgba(255,255,255,.35);
+}
+.dp-navbar.dp-navbar--top .navbar-toggler-icon{
+  filter: invert(1);
+}
+
+/* -----------------------------
+   8) Sticky TOC (Sidebar)
+------------------------------ */
+.dp-article-grid{
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+}
+
+@media (max-width: 992px){
+  .dp-article-grid{ grid-template-columns: 1fr; }
+}
+
+/* TOC box */
+.dp-toc{
+  border-radius: var(--dp-radius);
+  background: #fff;
+  border: 1px solid var(--dp-border);
+  box-shadow: var(--dp-shadow);
+  padding: 14px;
+}
+
+.dp-toc h3{
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-size: 14px;
+  margin: 0 0 10px;
+  font-weight: 900;
+  color: var(--dp-title);
+}
+
+.dp-toc ul{
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.dp-toc a{
+  display: block;
+  padding: 9px 10px;
+  border-radius: 12px;
+  text-decoration: none;
+  color: rgba(17,24,39,.86);
+  border: 1px solid transparent;
+}
+.dp-toc a:hover{
+  background: rgba(231,111,81,.08);
+  border-color: rgba(231,111,81,.16);
+}
+.dp-toc a.is-active{
+  background: rgba(231,111,81,.12);
+  border-color: rgba(231,111,81,.24);
+  font-weight: 800;
+}
+
+/* Sticky only on desktop */
+@media (min-width: 993px){
+  .dp-toc{
+    position: sticky;
+    top: 92px;
+    max-height: calc(100vh - 120px);
+    overflow: auto;
+  }
+}
+
+/* Anchor offset for fixed navbar */
+.dp-prose h2[id]{ scroll-margin-top: 110px; }
+
+/* -----------------------------
+   9) Timeline (Itinerario día por día)
+   Apply class .dp-timeline on the <ul>
+------------------------------ */
+.dp-timeline{
+  list-style: none;
+  padding-left: 0;
+  margin: 0 0 1.25rem;
+  position: relative;
+}
+
+.dp-timeline::before{
+  content:"";
+  position: absolute;
+  left: 12px;
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  background: rgba(38,70,83,.18);
+}
+
+.dp-timeline > li{
+  position: relative;
+  padding-left: 42px;
+  margin: 0 0 14px;
+}
+
+.dp-timeline > li::before{
+  content:"";
+  position: absolute;
+  left: 6px;
+  top: 4px;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: var(--dp-accent);
+  box-shadow: 0 6px 16px rgba(231,111,81,.22);
+}
+
+.dp-timeline > li strong{
+  color: var(--dp-title);
+}
+
+/* Optional: tighter paragraphs within timeline */
+.dp-timeline p{ margin: 0.25rem 0 0; }
+
+/* -----------------------------
+   10) Optional: Article hero overlay readability
+------------------------------ */
+.dp-hero{
+  position: relative;
+  border-radius: var(--dp-radius);
+  overflow: hidden;
+  box-shadow: var(--dp-shadow);
+  border: 1px solid var(--dp-border);
+}
+
+.dp-hero .dp-hero-img{
+  width: 100%;
+  height: 420px;
+  object-fit: cover;
+  display: block;
+}
+
+@media (max-width: 576px){
+  .dp-hero .dp-hero-img{ height: 300px; }
+}
+
+.dp-hero .dp-hero-overlay{
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  padding: 22px;
+  color: #fff;
+  background: linear-gradient(to top, rgba(0,0,0,.55), rgba(0,0,0,0));
+}
