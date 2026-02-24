@@ -39,18 +39,6 @@ from .blocks import (
 # ============================================================
 
 def build_toc_and_body_html(stream):
-    """
-    Genera:
-      - toc: lista de {title, anchor, level}
-      - body_html: HTML renderizado del StreamField, insertando <h2 id="...">
-        para bloques section_title y quick_section(s) sin duplicar títulos.
-
-    Importante:
-      - Los bloques se renderizan con block.render(), pero cuando un bloque trae
-        un título (section_title / quick_section / quick_sections) nosotros
-        rendereamos el <h2 id="..."> manualmente para TOC y luego renderizamos
-        el bloque completo "sin título" usando CSS (.qs__rendered--no-title).
-    """
     used = {}
     toc = []
     parts = []
@@ -71,17 +59,14 @@ def build_toc_and_body_html(stream):
             parts.append(
                 format_html(
                     '<section class="block block-title"><h2 id="{}">{}</h2><p class="muted">{}</p></section>',
-                    anchor,
-                    title,
-                    subtitle,
+                    anchor, title, subtitle
                 )
             )
         else:
             parts.append(
                 format_html(
                     '<section class="block block-title"><h2 id="{}">{}</h2></section>',
-                    anchor,
-                    title,
+                    anchor, title
                 )
             )
 
@@ -89,7 +74,6 @@ def build_toc_and_body_html(stream):
         return [], mark_safe("")
 
     for block in stream:
-        # 1) Título explícito
         if block.block_type == "section_title":
             title = (block.value.get("title") or "").strip()
             if not title:
@@ -98,7 +82,6 @@ def build_toc_and_body_html(stream):
             add_heading(title, subtitle)
             continue
 
-        # 2) QuickSection: si tiene title, lo metemos en TOC y luego renderizamos bloque sin repetir H2
         if block.block_type == "quick_section":
             title = (block.value.get("title") or "").strip()
             subtitle = (block.value.get("subtitle") or "").strip()
@@ -108,33 +91,28 @@ def build_toc_and_body_html(stream):
                 parts.append(
                     format_html(
                         '<div class="qs__rendered qs__rendered--no-title">{}</div>',
-                        mark_safe(block.render()),
+                        mark_safe(block.render(context={"hide_title": True})),
                     )
                 )
             else:
-                parts.append(mark_safe(block.render()))
+                parts.append(mark_safe(block.render(context={"hide_title": False})))
             continue
 
-        # 3) QuickSections: contenedor con varias secciones
         if block.block_type == "quick_sections":
             sections = block.value.get("sections") or []
             for s in sections:
+                # dict-like
                 title = (getattr(s, "get", lambda *_: None)("title") or "").strip()
                 if not title:
                     continue
                 subtitle = (getattr(s, "get", lambda *_: None)("subtitle") or "").strip()
                 add_heading(title, subtitle)
 
-                # Render de la sección completa, pero sin título (ya lo agregamos)
-                parts.append(
-                    format_html(
-                        '<div class="qs__rendered qs__rendered--no-title">{}</div>',
-                        mark_safe(s.render()),
-                    )
-                )
+            # render contenedor una sola vez, ocultando títulos dentro
+            parts.append(mark_safe(block.render(context={"hide_title": True})))
             continue
 
-        # 4) Otros bloques: render normal
+        # otros bloques: render normal
         parts.append(mark_safe(block.render()))
 
     return toc, mark_safe("".join(parts))
