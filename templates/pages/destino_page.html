@@ -4,11 +4,8 @@
 {% block extra_head %}
   {% include "partials/jsonld_breadcrumbs.html" %}
   {% include "partials/jsonld_article.html" %}
-  {# solo si querés FAQ en artículos también #}
   {# {% include "partials/jsonld_faq.html" %} #}
 {% endblock %}
-
-
 
 {% block content %}
 <article class="container">
@@ -19,7 +16,6 @@
     {% endif %}
 
     <div class="hero-content">
-
       <nav class="breadcrumbs" aria-label="Breadcrumb">
         <ol>
           <li><a href="/">Inicio</a></li>
@@ -31,7 +27,7 @@
       </nav>
 
       <h1>{{ page.title }}</h1>
-      {% if page.intro %}<p>{{ page.intro }}</p>{% endif %}
+      {% if page.intro %}<p class="muted">{{ page.intro }}</p>{% endif %}
 
       {% if page.tags.all %}
         <div class="tags">
@@ -40,82 +36,87 @@
           {% endfor %}
         </div>
       {% endif %}
-
     </div>
   </header>
 
-  <div class="content post-shell">
+  {# ✅ Igualamos estructura a ArticuloPage: post__content + toc + content post__body #}
+  <div class="post__content">
 
-    {% if page.body %}
-      <div class="post__content">
-        {% if toc %}
-          <nav class="toc" id="toc" aria-label="Tabla de contenidos">
-            <h3 class="toc__title">Contenido</h3>
-            <ul class="toc__list">
-              {% for item in toc %}
-                <li class="toc__item">
-                  <a class="toc__link" href="#{{ item.anchor }}">{{ item.title }}</a>
-                </li>
-              {% endfor %}
-            </ul>
-          </nav>
-        {% endif %}
-
-        <div class="post__body">
-  {{ body_html|safe }}
-</div>
-      </div>
-    {% endif %}
-
-    {% if ctas %}
-      <section class="cta-stack">
-        <h2>Recomendaciones para tu viaje</h2>
-
-        {% if ctas_source == "manual" %}
-          {% for block in ctas %}
-            {% include_block block %}
-          {% endfor %}
-        {% else %}
-          {% for cta in ctas %}
-            {% include "partials/cta_button.html" with url=cta.url text=cta.button_text note=cta.note %}
-          {% endfor %}
-        {% endif %}
-      </section>
-    {% endif %}
-
-    {# ✅ FAQ (StreamField) #}
-    {% if page.faq %}
-      <section class="faq">
-        {% for block in page.faq %}
-          {% if block.block_type == "faq" %}
-            <h2>{{ block.value.title|default:"Preguntas frecuentes" }}</h2>
-
-            {% for item in block.value.items %}
-              <details class="faq-item">
-                <summary>{{ item.question }}</summary>
-                <div class="faq-answer">
-                  {{ item.answer|richtext }}
-                </div>
-              </details>
-            {% endfor %}
-          {% endif %}
-        {% endfor %}
-      </section>
-    {% endif %}
-
-    {# ✅ Guías relacionadas a este destino (reverse del Orderable) #}
-    {% if page.articulos_relacionados.all %}
-      <section class="related">
-        <h2>Guías para este destino</h2>
-        <ul>
-          {% for rel in page.articulos_relacionados.all %}
-            <li><a href="{{ rel.articulo.url }}">{{ rel.articulo.title }}</a></li>
+    {% if toc %}
+      <nav class="toc" aria-label="Tabla de contenidos">
+        <h3 class="toc__title">Contenido</h3>
+        <ul class="toc__list">
+          {% for item in toc %}
+            <li class="toc__item">
+              <a class="toc__link" href="#{{ item.anchor }}">{{ item.title }}</a>
+            </li>
           {% endfor %}
         </ul>
-      </section>
+      </nav>
     {% endif %}
 
+    <div class="content post__body">
+      {% if body_html %}
+        {{ body_html }}
+      {% elif page.body %}
+        {# Fallback: render tradicional de bloques #}
+        {% for block in page.body %}
+          {% include_block block %}
+        {% endfor %}
+      {% else %}
+        <p class="muted">Este destino todavía no tiene contenido publicado.</p>
+      {% endif %}
+    </div>
+
   </div>
+
+  {% if ctas %}
+    <section class="cta-stack">
+      <h2>Recomendaciones para tu viaje</h2>
+
+      {% if ctas_source == "manual" %}
+        {% for block in ctas %}
+          {% include_block block %}
+        {% endfor %}
+      {% else %}
+        {% for cta in ctas %}
+          {% include "partials/cta_button.html" with url=cta.url text=cta.button_text note=cta.note %}
+        {% endfor %}
+      {% endif %}
+    </section>
+  {% endif %}
+
+  {# ✅ FAQ (StreamField) #}
+  {% if page.faq %}
+    <section class="faq">
+      {% for block in page.faq %}
+        {% if block.block_type == "faq" %}
+          <h2>{{ block.value.title|default:"Preguntas frecuentes" }}</h2>
+
+          {% for item in block.value.items %}
+            <details class="faq-item">
+              <summary>{{ item.question }}</summary>
+              <div class="faq-answer">
+                {{ item.answer|richtext }}
+              </div>
+            </details>
+          {% endfor %}
+        {% endif %}
+      {% endfor %}
+    </section>
+  {% endif %}
+
+  {# ✅ Guías relacionadas a este destino (reverse del Orderable) #}
+  {% if page.articulos_relacionados.all %}
+    <section class="related">
+      <h2>Guías para este destino</h2>
+      <ul>
+        {% for rel in page.articulos_relacionados.all %}
+          <li><a href="{{ rel.articulo.url }}">{{ rel.articulo.title }}</a></li>
+        {% endfor %}
+      </ul>
+    </section>
+  {% endif %}
 
   {# ✅ Destinos relacionados (por tags/hermanos) #}
   {% if related_destinos %}
