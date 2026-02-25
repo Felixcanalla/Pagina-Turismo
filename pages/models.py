@@ -32,6 +32,7 @@ from .blocks import (
     SectionTitleBlock,
     YouTubeBlock,
 )
+from .blocks import QuickSectionsBlock, QuickSectionBlock
 
 
 # ============================================================
@@ -958,8 +959,8 @@ def save(self, *args, **kwargs):
         self.body = self._html_to_stream_data(self.bulk_paste, fill_embed_urls=True)
         self.bulk_paste = ""
     super().save(*args, **kwargs)
-    
-        
+
+
 class ArticuloDestinoRelation(Orderable):
     articulo = ParentalKey(
         "pages.ArticuloPage",

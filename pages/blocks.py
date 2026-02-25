@@ -141,3 +141,17 @@ class QuickSectionBlock(blocks.StructBlock):
         icon = "form"
         label = "Sección (rápida)"
         template = "blocks/quick_section.html"
+
+
+
+class QuickSectionsBlock(blocks.StructBlock):
+        """
+        Contenedor para repetir muchas secciones sin agregar bloque por bloque.
+        """
+        title = blocks.CharBlock(required=False, max_length=80, label="Título del bloque (opcional)")
+        sections = blocks.ListBlock(QuickSectionBlock(), min_num=1, label="Secciones")
+
+        class Meta:
+            icon = "list-ul"
+            label = "Secciones (rápidas)"
+            template = "blocks/quick_sections.html"
