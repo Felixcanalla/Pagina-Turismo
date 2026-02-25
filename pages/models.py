@@ -788,6 +788,10 @@ class ArticuloPage(Page):
     def _looks_like_maps(self, url: str) -> bool:
         u = (url or "").lower()
         return ("google.com/maps" in u) or ("/maps" in u)
+    
+
+    def _clean_html_fragment(self, html: str) -> str:
+        return (html or "").strip()
 
     def _html_to_stream_data(self, html: str, fill_embed_urls: bool = True):
         """
@@ -809,6 +813,8 @@ class ArticuloPage(Page):
         section_has_image = False
 
         KEEP_AS_HTML = {"table", "ul", "ol", "blockquote", "hr"}
+
+
 
         def flush_current_section():
             nonlocal current, section_chunks, section_has_image
