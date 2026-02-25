@@ -615,3 +615,21 @@ a:hover{ filter: brightness(.95); }
   position: relative;
   z-index: 2;
 }
+
+
+.hero{
+  position: relative;
+}
+
+.hero::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background: linear-gradient(to right, rgba(0,0,0,.55), rgba(0,0,0,.2));
+  z-index:1;
+}
+
+.hero > *{
+  position: relative;
+  z-index:2;
+}
