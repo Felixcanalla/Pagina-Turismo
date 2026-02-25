@@ -604,3 +604,14 @@ a:hover{ filter: brightness(.95); }
 .toc__link.is-active{
   text-decoration: none;
 }
+
+/* =========================
+   Hero H1 override
+   ========================= */
+
+.hero h1{
+  color: #ffffff; /* o el color que elijas */
+  text-shadow: 0 4px 18px rgba(0,0,0,.45);
+  position: relative;
+  z-index: 2;
+}
