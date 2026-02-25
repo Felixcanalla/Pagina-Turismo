@@ -490,7 +490,7 @@ class DestinoPage(Page):
     def _clean_html_fragment(self, html: str) -> str:
         return (html or "").strip()
 
-    def _html_to_stream_data_quicksections(self, html: str, fill_embed_urls: bool = True):
+    def _html_to_stream_data(self, html: str, fill_embed_urls: bool = True):
         """
         Importa HTML:
         - Cada <h2> => 1 quick_section
@@ -629,10 +629,22 @@ class DestinoPage(Page):
 
         return stream_data
 
+    def clean(self):
+        super().clean()
+        if self.bulk_paste and self.bulk_paste.strip():
+            data = self._html_to_stream_data(self.bulk_paste, fill_embed_urls=True)
+            # Solo pisamos si realmente generó algo
+            if data:
+                self.body = data
+
+
     def save(self, *args, **kwargs):
-        if self.bulk_paste and self.bulk_paste.strip() and (not self.body or len(self.body) == 0):
-            self.body = self._html_to_stream_data_quicksections(self.bulk_paste, fill_embed_urls=True)
-            self.bulk_paste = ""
+        # Backup: por si clean no corrió en algún flujo
+        if self.bulk_paste and self.bulk_paste.strip():
+            data = self._html_to_stream_data(self.bulk_paste, fill_embed_urls=True)
+            if data:
+                self.body = data
+                self.bulk_paste = ""
         super().save(*args, **kwargs)
 
     # -------------------------
@@ -916,6 +928,24 @@ class ArticuloPage(Page):
             flush_intro_as_rich_text()
 
         return stream_data
+    
+    def clean(self):
+        super().clean()
+        if self.bulk_paste and self.bulk_paste.strip():
+            data = self._html_to_stream_data(self.bulk_paste, fill_embed_urls=True)
+            # Solo pisamos si realmente generó algo
+            if data:
+                self.body = data
+
+
+    def save(self, *args, **kwargs):
+        # Backup: por si clean no corrió en algún flujo
+        if self.bulk_paste and self.bulk_paste.strip():
+            data = self._html_to_stream_data(self.bulk_paste, fill_embed_urls=True)
+            if data:
+                self.body = data
+                self.bulk_paste = ""
+        super().save(*args, **kwargs)
 
     def _build_toc(self):
         toc = []
