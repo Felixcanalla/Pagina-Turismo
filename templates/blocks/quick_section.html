@@ -12,7 +12,7 @@
 
   {% if value.body %}
     <div class="qs__body">
-      {{ value.body|richtext }}
+  {{ value.body|safe }}
     </div>
   {% endif %}
 

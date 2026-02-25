@@ -633,3 +633,28 @@ a:hover{ filter: brightness(.95); }
   position: relative;
   z-index:2;
 }
+
+
+
+.qs__body table{
+  width: 100%;
+  border-collapse: collapse;
+  margin: 14px 0 18px;
+  background: #fff;
+  border: 1px solid rgba(0,0,0,.08);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.qs__body th,
+.qs__body td{
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(0,0,0,.06);
+  vertical-align: top;
+}
+
+.qs__body thead th{
+  background: var(--dp-title);
+  color: #fff;
+  font-weight: 800;
+}

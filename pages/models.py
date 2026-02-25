@@ -559,15 +559,21 @@ class DestinoPage(Page):
                 continue
 
             # Antes del primer H2 => intro
+            # Antes del primer H2 => intro
             if current is None:
                 if tag == "p":
                     inner = node.decode_contents().strip()
                     if inner and node.get_text(" ", strip=True):
                         section_chunks.append(f"<p>{inner}</p>")
+
                 elif tag == "h3":
                     text = node.get_text(" ", strip=True)
                     if text:
                         section_chunks.append(f"<h3>{text}</h3>")
+
+                elif tag in ("table", "ul", "ol", "blockquote", "hr"):
+                    section_chunks.append(str(node))
+
                 continue
 
             # Dentro de sección
@@ -581,6 +587,9 @@ class DestinoPage(Page):
                 text = node.get_text(" ", strip=True)
                 if text:
                     section_chunks.append(f"<h3>{text}</h3>")
+
+            elif tag in ("table", "ul", "ol", "blockquote", "hr"):
+                    section_chunks.append(str(node))
 
             elif tag == "img":
                 if not section_has_image:
@@ -768,21 +777,46 @@ class ArticuloPage(Page):
         return ("google.com/maps" in u) or ("/maps" in u)
 
     def _html_to_stream_data(self, html: str, fill_embed_urls: bool = True):
+        """
+        Importa HTML:
+        - Cada <h2> => 1 quick_section
+        - <p> + <h3> + (table/ul/ol/blockquote/hr) => body HTML dentro de quick_section.body
+        - primer <img> por sección => quick_section.image placeholder (None)
+        - imgs extra => bloque image placeholder
+        - iframes => bloque youtube/map (con src si fill_embed_urls=True)
+        - contenido antes del primer <h2> => rich_text suelto
+        """
         soup = BeautifulSoup(html or "", "html.parser")
         root = soup.body or soup
 
         stream_data = []
-        pending = []
 
-        def flush():
-            nonlocal pending
-            combined = "".join(pending).strip()
-            if combined:
-                stream_data.append({"type": "rich_text", "value": combined})
-            pending = []
+        current = None
+        section_chunks = []
+        section_has_image = False
 
-        # Guardar estos tags como HTML dentro del RichText
-        KEEP_AS_HTML = {"p", "h3", "ul", "ol", "table", "blockquote", "hr"}
+        KEEP_AS_HTML = {"table", "ul", "ol", "blockquote", "hr"}
+
+        def flush_current_section():
+            nonlocal current, section_chunks, section_has_image
+            if not current:
+                return
+
+            body_html = self._clean_html_fragment("".join(section_chunks))
+            current["body"] = body_html
+            stream_data.append({"type": "quick_section", "value": current})
+
+            current = None
+            section_chunks = []
+            section_has_image = False
+
+        def flush_intro_as_rich_text():
+            nonlocal section_chunks
+            if section_chunks:
+                combined = self._clean_html_fragment("".join(section_chunks))
+                if combined:
+                    stream_data.append({"type": "rich_text", "value": combined})
+                section_chunks = []
 
         for node in root.descendants:
             if not getattr(node, "name", None):
@@ -793,45 +827,93 @@ class ArticuloPage(Page):
             if tag in ("html", "head", "body", "div", "span"):
                 continue
 
+            # H2: nueva sección
             if tag == "h2":
-                flush()
+                flush_current_section()
+                flush_intro_as_rich_text()
+
                 title = node.get_text(" ", strip=True)
-                if title:
-                    stream_data.append(
-                        {"type": "section_title", "value": {"title": title, "subtitle": ""}}
-                    )
+                if not title:
+                    continue
+
+                current = {
+                    "title": title,
+                    "subtitle": "",
+                    "body": "",
+                    "image": None,
+                    "caption": "",
+                    "cta_text": "",
+                    "cta_url": "",
+                    "cta_note": "",
+                }
                 continue
 
-            if tag in KEEP_AS_HTML:
-                # Guarda el HTML completo del nodo (incluye li/tr/td internos)
-                pending.append(str(node))
+            # Antes del primer H2 (intro)
+            if current is None:
+                if tag == "p":
+                    inner = node.decode_contents().strip()
+                    if inner and node.get_text(" ", strip=True):
+                        section_chunks.append(f"<p>{inner}</p>")
+
+                elif tag == "h3":
+                    text = node.get_text(" ", strip=True)
+                    if text:
+                        section_chunks.append(f"<h3>{text}</h3>")
+
+                elif tag in KEEP_AS_HTML:
+                    section_chunks.append(str(node))
+
+                elif tag == "img":
+                    stream_data.append({"type": "image", "value": {"image": None, "caption": ""}})
+
+                elif tag == "iframe":
+                    src = (node.get("src") or "").strip()
+                    if self._looks_like_youtube(src):
+                        stream_data.append({"type": "youtube", "value": {"title": "", "video": (src if fill_embed_urls else "")}})
+                    elif self._looks_like_maps(src):
+                        stream_data.append({"type": "map", "value": {"title": "", "map_url": (src if fill_embed_urls else "")}})
+                    else:
+                        safe = src.replace('"', "&quot;")
+                        stream_data.append({"type": "rich_text", "value": f"<p>📌 Embed pendiente: <a href=\"{safe}\" target=\"_blank\" rel=\"noopener\">{safe}</a></p>"})
                 continue
 
-            if tag == "img":
-                flush()
-                stream_data.append({"type": "image", "value": {"image": None, "caption": ""}})
-                continue
+            # Dentro de sección
+            if tag == "p":
+                inner = node.decode_contents().strip()
+                if inner and node.get_text(" ", strip=True):
+                    section_chunks.append(f"<p>{inner}</p>")
 
-            if tag == "iframe":
-                flush()
+            elif tag == "h3":
+                text = node.get_text(" ", strip=True)
+                if text:
+                    section_chunks.append(f"<h3>{text}</h3>")
+
+            elif tag in KEEP_AS_HTML:
+                section_chunks.append(str(node))
+
+            elif tag == "img":
+                if not section_has_image:
+                    current["image"] = None
+                    current["caption"] = ""
+                    section_has_image = True
+                else:
+                    stream_data.append({"type": "image", "value": {"image": None, "caption": ""}})
+
+            elif tag == "iframe":
                 src = (node.get("src") or "").strip()
-
                 if self._looks_like_youtube(src):
-                    stream_data.append(
-                        {"type": "youtube", "value": {"title": "", "video": (src if fill_embed_urls else "")}}
-                    )
+                    stream_data.append({"type": "youtube", "value": {"title": "", "video": (src if fill_embed_urls else "")}})
                 elif self._looks_like_maps(src):
-                    stream_data.append(
-                        {"type": "map", "value": {"title": "", "map_url": (src if fill_embed_urls else "")}}
-                    )
+                    stream_data.append({"type": "map", "value": {"title": "", "map_url": (src if fill_embed_urls else "")}})
                 else:
                     safe = src.replace('"', "&quot;")
-                    stream_data.append(
-                        {"type": "rich_text", "value": f"<p>Embed: <a href=\"{safe}\" target=\"_blank\" rel=\"noopener\">{safe}</a></p>"}
-                    )
-                continue
+                    section_chunks.append(f"<p>📌 Embed pendiente: <a href=\"{safe}\" target=\"_blank\" rel=\"noopener\">{safe}</a></p>")
 
-        flush()
+        if current:
+            flush_current_section()
+        else:
+            flush_intro_as_rich_text()
+
         return stream_data
 
     def _build_toc(self):
@@ -867,12 +949,17 @@ class ArticuloPage(Page):
         context["body_html"] = body_html
         return context
 
-    def save(self, *args, **kwargs):
-        # Si pegaste algo, lo convertimos y vaciamos
-        if self.bulk_paste and self.bulk_paste.strip():
-            self.body = self._html_to_stream_data(self.bulk_paste, fill_embed_urls=True)
-            self.bulk_paste = ""
-        super().save(*args, **kwargs)
+def save(self, *args, **kwargs):
+    if (
+        self.bulk_paste 
+        and self.bulk_paste.strip() 
+        and (not self.body or len(self.body) == 0)
+    ):
+        self.body = self._html_to_stream_data(self.bulk_paste, fill_embed_urls=True)
+        self.bulk_paste = ""
+    super().save(*args, **kwargs)
+    
+        
 class ArticuloDestinoRelation(Orderable):
     articulo = ParentalKey(
         "pages.ArticuloPage",
