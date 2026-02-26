@@ -218,4 +218,3 @@ if not DEBUG:
     SECURE_REFERRER_POLICY = "same-origin"
 
 
-WHITENOISE_MANIFEST_STRICT = False
