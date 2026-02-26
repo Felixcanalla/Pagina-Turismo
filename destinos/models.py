@@ -68,3 +68,4 @@ class SeccionDestino(models.Model):
 
     def __str__(self):
         return f"{self.destino} - {self.titulo}"
+ 
