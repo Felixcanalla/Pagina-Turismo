@@ -4,14 +4,13 @@
 {% block extra_head %}
   {% include "partials/jsonld_breadcrumbs.html" %}
   {% include "partials/jsonld_article.html" %}
-  {# solo si querés FAQ en artículos también #}
   {# {% include "partials/jsonld_faq.html" %} #}
 {% endblock %}
 
 {% block content %}
 <article class="container">
 
-  <header class="hero hero--stack">
+  <header class="hero hero--stack {% if not page.cover_image %}hero--noimg{% endif %}">
     <div class="hero-stack">
 
       <nav class="breadcrumbs" aria-label="Breadcrumb">
@@ -25,19 +24,21 @@
       </nav>
 
       <h1>{{ page.title }}</h1>
+
       {% if page.intro %}
         <p class="muted">{{ page.intro }}</p>
+      {% elif page.search_description %}
+        <p class="muted">{{ page.search_description }}</p>
       {% endif %}
     </div>
 
-    
     {% if page.cover_image %}
       {% image page.cover_image fill-1600x700 class="hero-img" %}
     {% endif %}
   </header>
 
   <div class="post__content">
-    {% if toc %}
+    {% if toc|length %}
       <nav class="toc" aria-label="Tabla de contenidos">
         <h3 class="toc__title">Contenido</h3>
         <ul class="toc__list">
@@ -51,11 +52,9 @@
     {% endif %}
 
     <div class="content post__body">
-      
       {% if body_html %}
         {{ body_html }}
       {% elif page.body %}
-        {# Fallback: render tradicional de bloques #}
         {% for block in page.body %}
           {% include_block block %}
         {% endfor %}
@@ -67,7 +66,7 @@
 
   {# ✅ Destinos relacionados (Orderable) #}
   {% with related=page.destinos_relacionados.all %}
-    {% if related %}
+    {% if related.exists %}
       <section class="related">
         <h2>Destinos relacionados</h2>
         <ul>

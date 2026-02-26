@@ -22,7 +22,7 @@ urlpatterns = [
     path("sitemap.xml", sitemap, {"sitemaps": sitemaps}),
 
     # Tus urls propias (si tenés)
-    path("", include("core.urls")),
+   # path("", include("core.urls")),
 
     # Wagtail pages (SIEMPRE al final)
     path("", include("wagtail.urls")),

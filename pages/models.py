@@ -747,9 +747,20 @@ class DestinoPage(Page):
 
 
 
-
-
 class ArticuloPage(Page):
+    template = "pages/articulo_page.html"
+
+    seo_description = models.CharField(max_length=160, blank=True)
+    intro = models.CharField(max_length=250, blank=True)
+
+    cover_image = models.ForeignKey(
+        "wagtailimages.Image",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+    )
+
     bulk_paste = models.TextField(
         blank=True,
         default="",
@@ -774,13 +785,28 @@ class ArticuloPage(Page):
     )
 
     content_panels = Page.content_panels + [
+        FieldPanel("intro"),
+        FieldPanel("cover_image"),
         FieldPanel("bulk_paste"),
         FieldPanel("body"),
         InlinePanel("destinos_relacionados", label="Destinos relacionados"),
     ]
 
-    template = "pages/articulo_page.html"
+    promote_panels = Page.promote_panels + [
+        MultiFieldPanel([FieldPanel("seo_description")], heading="SEO"),
+    ]
 
+    search_fields = Page.search_fields + [
+        index.SearchField("intro"),
+        index.SearchField("body"),
+    ]
+
+    parent_page_types = ["pages.CategoriaPage"]
+    subpage_types = []
+
+    # -------------------------
+    # Import helpers
+    # -------------------------
     def _looks_like_youtube(self, url: str) -> bool:
         u = (url or "").lower()
         return ("youtube.com" in u) or ("youtu.be" in u)
@@ -788,43 +814,28 @@ class ArticuloPage(Page):
     def _looks_like_maps(self, url: str) -> bool:
         u = (url or "").lower()
         return ("google.com/maps" in u) or ("/maps" in u)
-    
 
     def _clean_html_fragment(self, html: str) -> str:
         return (html or "").strip()
 
     def _html_to_stream_data(self, html: str, fill_embed_urls: bool = True):
-        """
-        Importa HTML:
-        - Cada <h2> => 1 quick_section
-        - <p> + <h3> + (table/ul/ol/blockquote/hr) => body HTML dentro de quick_section.body
-        - primer <img> por sección => quick_section.image placeholder (None)
-        - imgs extra => bloque image placeholder
-        - iframes => bloque youtube/map (con src si fill_embed_urls=True)
-        - contenido antes del primer <h2> => rich_text suelto
-        """
         soup = BeautifulSoup(html or "", "html.parser")
         root = soup.body or soup
 
         stream_data = []
-
         current = None
         section_chunks = []
         section_has_image = False
 
         KEEP_AS_HTML = {"table", "ul", "ol", "blockquote", "hr"}
 
-
-
         def flush_current_section():
             nonlocal current, section_chunks, section_has_image
             if not current:
                 return
-
             body_html = self._clean_html_fragment("".join(section_chunks))
             current["body"] = body_html
             stream_data.append({"type": "quick_section", "value": current})
-
             current = None
             section_chunks = []
             section_has_image = False
@@ -846,7 +857,6 @@ class ArticuloPage(Page):
             if tag in ("html", "head", "body", "div", "span"):
                 continue
 
-            # H2: nueva sección
             if tag == "h2":
                 flush_current_section()
                 flush_intro_as_rich_text()
@@ -867,24 +877,20 @@ class ArticuloPage(Page):
                 }
                 continue
 
-            # Antes del primer H2 (intro)
+            # Antes del primer H2
             if current is None:
                 if tag == "p":
                     inner = node.decode_contents().strip()
                     if inner and node.get_text(" ", strip=True):
                         section_chunks.append(f"<p>{inner}</p>")
-
                 elif tag == "h3":
                     text = node.get_text(" ", strip=True)
                     if text:
                         section_chunks.append(f"<h3>{text}</h3>")
-
                 elif tag in KEEP_AS_HTML:
                     section_chunks.append(str(node))
-
                 elif tag == "img":
                     stream_data.append({"type": "image", "value": {"image": None, "caption": ""}})
-
                 elif tag == "iframe":
                     src = (node.get("src") or "").strip()
                     if self._looks_like_youtube(src):
@@ -901,15 +907,12 @@ class ArticuloPage(Page):
                 inner = node.decode_contents().strip()
                 if inner and node.get_text(" ", strip=True):
                     section_chunks.append(f"<p>{inner}</p>")
-
             elif tag == "h3":
                 text = node.get_text(" ", strip=True)
                 if text:
                     section_chunks.append(f"<h3>{text}</h3>")
-
             elif tag in KEEP_AS_HTML:
                 section_chunks.append(str(node))
-
             elif tag == "img":
                 if not section_has_image:
                     current["image"] = None
@@ -917,7 +920,6 @@ class ArticuloPage(Page):
                     section_has_image = True
                 else:
                     stream_data.append({"type": "image", "value": {"image": None, "caption": ""}})
-
             elif tag == "iframe":
                 src = (node.get("src") or "").strip()
                 if self._looks_like_youtube(src):
@@ -934,48 +936,21 @@ class ArticuloPage(Page):
             flush_intro_as_rich_text()
 
         return stream_data
-    
+
     def clean(self):
         super().clean()
         if self.bulk_paste and self.bulk_paste.strip():
             data = self._html_to_stream_data(self.bulk_paste, fill_embed_urls=True)
-            # Solo pisamos si realmente generó algo
             if data:
                 self.body = data
 
-
     def save(self, *args, **kwargs):
-        # Backup: por si clean no corrió en algún flujo
         if self.bulk_paste and self.bulk_paste.strip():
             data = self._html_to_stream_data(self.bulk_paste, fill_embed_urls=True)
             if data:
                 self.body = data
                 self.bulk_paste = ""
         super().save(*args, **kwargs)
-
-    def _build_toc(self):
-        toc = []
-        if not self.body:
-            return toc
-
-        for block in self.body:
-            if block.block_type == "section_title":
-                title = (block.value.get("title") or "").strip()
-                if title:
-                    toc.append({"title": title, "anchor": slugify(title)})
-
-            elif block.block_type == "quick_section":
-                title = (block.value.get("title") or "").strip()
-                if title:
-                    toc.append({"title": title, "anchor": slugify(title)})
-
-            elif block.block_type == "quick_sections":
-                for s in block.value.get("sections", []) or []:
-                    st = (s.get("title") or "").strip()
-                    if st:
-                        toc.append({"title": st, "anchor": slugify(st)})
-
-        return toc
 
     def get_context(self, request, *args, **kwargs):
         context = super().get_context(request, *args, **kwargs)
@@ -986,15 +961,7 @@ class ArticuloPage(Page):
         context["body_html"] = body_html
         return context
 
-def save(self, *args, **kwargs):
-    if (
-        self.bulk_paste 
-        and self.bulk_paste.strip() 
-        and (not self.body or len(self.body) == 0)
-    ):
-        self.body = self._html_to_stream_data(self.bulk_paste, fill_embed_urls=True)
-        self.bulk_paste = ""
-    super().save(*args, **kwargs)
+
 
 
 class ArticuloDestinoRelation(Orderable):
