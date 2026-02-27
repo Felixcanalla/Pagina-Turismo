@@ -2,4 +2,4 @@ User-agent: *
 Disallow: /admin/
 Disallow: /django-admin/
 
-Sitemap: {{ request.scheme }}://{{ request.get_host }}/sitemap.xml
+Sitemap: https://destinosposibles.com/sitemap.xml

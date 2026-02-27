@@ -1,10 +1,10 @@
 def site_meta(request):
     return {
-        "SITE_NAME": "Destinos Posibles",
-        "SITE_EMAIL": "contacto@pagina-turismo.com",
-        "SITE_INSTAGRAM": "https://www.instagram.com/",   # poné el real o dejá vacío
-        "SITE_FACEBOOK": "https://www.facebook.com/",
-        "SITE_YOUTUBE": "https://www.youtube.com/",
-        "MADE_BY_TEXT": "Patricio Migone / HDFelix",
-        "MADE_BY_URL": "",  # opcional
+        "site_name": "Destinos Posibles",
+        "site_email": "contacto@destinosposibles.com",
+        "site_instagram": "https://www.instagram.com/",
+        "site_facebook": "https://www.facebook.com/",
+        "site_youtube": "https://www.youtube.com/",
+        "made_by_text": "Patricio Migone / HDFelix",
+        "made_by_url": "",
     }
