@@ -47,7 +47,7 @@
   <meta property="og:locale" content="es_AR">
 
   {# Tipo OG (tolerante): ArticuloPage => article #}
-  {% if page.__class__.__name__|lower == "articulopage" %}
+{% if page.content_type.model == "articulopage" %}
     <meta property="og:type" content="article">
   {% else %}
     <meta property="og:type" content="website">
