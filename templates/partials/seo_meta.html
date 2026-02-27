@@ -1,13 +1,7 @@
 {% load wagtailimages_tags static %}
 
-{% with
-  page_url=page.full_url|default:request.build_absolute_uri
-  site_name="Destinos Posibles"
-  base=request.scheme|add:"://"|add:request.get_host
-  page_title=page.seo_title|default:page.title|default:site_name
-%}
+{% with page_url=page.full_url|default:request.build_absolute_uri site_name="Destinos Posibles" base=request.scheme|add:"://"|add:request.get_host page_title=page.seo_title|default:page.title|default:site_name %}
 
-  {# --- TITLE --- #}
   <title>{{ page_title }}</title>
 
   {# --- DESCRIPTION (SEO/OG/Twitter desde una sola fuente) --- #}
@@ -37,17 +31,14 @@
     {% endwith %}
   {% endif %}
 
-  {# --- CANONICAL --- #}
   <link rel="canonical" href="{{ page_url }}">
 
-  {# --- OPEN GRAPH --- #}
   <meta property="og:site_name" content="{{ site_name }}">
   <meta property="og:title" content="{{ page_title }}">
   <meta property="og:url" content="{{ page_url }}">
   <meta property="og:locale" content="es_AR">
 
-  {# Tipo OG (tolerante): ArticuloPage => article #}
-{% if page.content_type.model == "articulopage" %}
+  {% if page and page.content_type and page.content_type.model == "articulopage" %}
     <meta property="og:type" content="article">
   {% else %}
     <meta property="og:type" content="website">
@@ -67,12 +58,10 @@
     <meta name="twitter:image" content="{{ base }}{% static 'img/og-default.jpg' %}">
   {% endif %}
 
-  {# --- TWITTER --- #}
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="{{ page_title }}">
   <meta name="twitter:url" content="{{ page_url }}">
 
-  {# --- ROBOTS: evita indexar staging en onrender --- #}
   {% if request.get_host and "onrender.com" in request.get_host %}
     <meta name="robots" content="noindex,follow">
   {% else %}

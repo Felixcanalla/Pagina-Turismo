@@ -1,11 +1,7 @@
-{# templates/partials/jsonld_destination.html #}
 {% load wagtailimages_tags static %}
 
 {% if page %}
-  {% with
-    page_url=page.full_url|default:request.build_absolute_uri
-    base=request.scheme|add:"://"|add:request.get_host
-  %}
+  {% with page_url=page.full_url|default:request.build_absolute_uri base=request.scheme|add:"://"|add:request.get_host %}
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
