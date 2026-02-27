@@ -71,7 +71,7 @@ INSTALLED_APPS = [
     "wagtail.admin",
     "wagtail",
     
-    "core",
+    
 
     # 3rd party
     "modelcluster",
@@ -123,12 +123,11 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-                "core.context_processors.site_meta",  # ✅ agregado
+                "pages.context_processors.site_meta",  # ✅ acá
             ],
         },
     },
 ]
-
 # -------------------------------------------------------------------
 # Database
 # -------------------------------------------------------------------
