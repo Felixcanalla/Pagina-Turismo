@@ -71,7 +71,7 @@ INSTALLED_APPS = [
     "wagtail.admin",
     "wagtail",
     
-    "core";
+    "core",
 
     # 3rd party
     "modelcluster",
