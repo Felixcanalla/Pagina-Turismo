@@ -1,71 +1,83 @@
 {% load wagtailimages_tags static %}
 
-{% with page_url=page.full_url|default:request.build_absolute_uri site_name="Destinos Posibles" base=request.scheme|add:"://"|add:request.get_host page_title=page.seo_title|default:page.title|default:site_name %}
+{% with site_name="Destinos Posibles" %}
+{% if page %}
+  {% with page_url=page.full_url|default:request.build_absolute_uri base=request.scheme|add:"://"|add:request.get_host page_title=page.seo_title|default:page.title|default:site_name %}
+    <title>{{ page_title }}</title>
 
-  <title>{{ page_title }}</title>
+    {% if page.seo_description %}
+      {% with desc=page.seo_description|striptags|truncatechars:160 %}
+        <meta name="description" content="{{ desc }}">
+        <meta property="og:description" content="{{ desc|truncatechars:200 }}">
+        <meta name="twitter:description" content="{{ desc|truncatechars:200 }}">
+      {% endwith %}
+    {% elif page.search_description %}
+      {% with desc=page.search_description|striptags|truncatechars:160 %}
+        <meta name="description" content="{{ desc }}">
+        <meta property="og:description" content="{{ desc|truncatechars:200 }}">
+        <meta name="twitter:description" content="{{ desc|truncatechars:200 }}">
+      {% endwith %}
+    {% elif page.intro %}
+      {% with desc=page.intro|striptags|truncatechars:160 %}
+        <meta name="description" content="{{ desc }}">
+        <meta property="og:description" content="{{ desc|truncatechars:200 }}">
+        <meta name="twitter:description" content="{{ desc|truncatechars:200 }}">
+      {% endwith %}
+    {% else %}
+      {% with desc="Guías, destinos y consejos de viaje." %}
+        <meta name="description" content="{{ desc }}">
+        <meta property="og:description" content="{{ desc }}">
+        <meta name="twitter:description" content="{{ desc }}">
+      {% endwith %}
+    {% endif %}
 
-  {# --- DESCRIPTION (SEO/OG/Twitter desde una sola fuente) --- #}
-  {% if page.seo_description %}
-    {% with desc=page.seo_description|striptags|truncatechars:160 %}
-      <meta name="description" content="{{ desc }}">
-      <meta property="og:description" content="{{ desc|truncatechars:200 }}">
-      <meta name="twitter:description" content="{{ desc|truncatechars:200 }}">
-    {% endwith %}
-  {% elif page.search_description %}
-    {% with desc=page.search_description|striptags|truncatechars:160 %}
-      <meta name="description" content="{{ desc }}">
-      <meta property="og:description" content="{{ desc|truncatechars:200 }}">
-      <meta name="twitter:description" content="{{ desc|truncatechars:200 }}">
-    {% endwith %}
-  {% elif page.intro %}
-    {% with desc=page.intro|striptags|truncatechars:160 %}
-      <meta name="description" content="{{ desc }}">
-      <meta property="og:description" content="{{ desc|truncatechars:200 }}">
-      <meta name="twitter:description" content="{{ desc|truncatechars:200 }}">
-    {% endwith %}
-  {% else %}
-    {% with desc="Guías, destinos y consejos de viaje." %}
-      <meta name="description" content="{{ desc }}">
-      <meta property="og:description" content="{{ desc }}">
-      <meta name="twitter:description" content="{{ desc }}">
-    {% endwith %}
-  {% endif %}
+    <link rel="canonical" href="{{ page_url }}">
 
-  <link rel="canonical" href="{{ page_url }}">
+    <meta property="og:site_name" content="{{ site_name }}">
+    <meta property="og:title" content="{{ page_title }}">
+    <meta property="og:url" content="{{ page_url }}">
+    <meta property="og:locale" content="es_AR">
 
+    {% if page.content_type and page.content_type.model == "articulopage" %}
+      <meta property="og:type" content="article">
+    {% else %}
+      <meta property="og:type" content="website">
+    {% endif %}
+
+    {% if page.cover_image %}
+      {% image page.cover_image fill-1200x630 as shareimg %}
+      <meta property="og:image" content="{{ base }}{{ shareimg.url }}">
+      <meta name="twitter:image" content="{{ base }}{{ shareimg.url }}">
+    {% elif page.hero_image %}
+      {% image page.hero_image fill-1200x630 as shareimg %}
+      <meta property="og:image" content="{{ base }}{{ shareimg.url }}">
+      <meta name="twitter:image" content="{{ base }}{{ shareimg.url }}">
+    {% else %}
+      <meta property="og:image" content="{{ base }}{% static 'img/og-default.jpg' %}">
+      <meta name="twitter:image" content="{{ base }}{% static 'img/og-default.jpg' %}">
+    {% endif %}
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ page_title }}">
+    <meta name="twitter:url" content="{{ page_url }}">
+
+    {% if request.get_host and "onrender.com" in request.get_host %}
+      <meta name="robots" content="noindex,follow">
+    {% else %}
+      <meta name="robots" content="index,follow">
+    {% endif %}
+  {% endwith %}
+{% else %}
+  <title>{{ site_name }}</title>
+  <meta name="description" content="Guías, destinos y consejos de viaje.">
+  <link rel="canonical" href="{{ request.build_absolute_uri }}">
   <meta property="og:site_name" content="{{ site_name }}">
-  <meta property="og:title" content="{{ page_title }}">
-  <meta property="og:url" content="{{ page_url }}">
-  <meta property="og:locale" content="es_AR">
-
-  {% if page and page.content_type and page.content_type.model == "articulopage" %}
-    <meta property="og:type" content="article">
-  {% else %}
-    <meta property="og:type" content="website">
-  {% endif %}
-
-  {# --- SHARE IMAGE: SIEMPRE ABSOLUTA --- #}
-  {% if page.cover_image %}
-    {% image page.cover_image fill-1200x630 as shareimg %}
-    <meta property="og:image" content="{{ base }}{{ shareimg.url }}">
-    <meta name="twitter:image" content="{{ base }}{{ shareimg.url }}">
-  {% elif page.hero_image %}
-    {% image page.hero_image fill-1200x630 as shareimg %}
-    <meta property="og:image" content="{{ base }}{{ shareimg.url }}">
-    <meta name="twitter:image" content="{{ base }}{{ shareimg.url }}">
-  {% else %}
-    <meta property="og:image" content="{{ base }}{% static 'img/og-default.jpg' %}">
-    <meta name="twitter:image" content="{{ base }}{% static 'img/og-default.jpg' %}">
-  {% endif %}
-
+  <meta property="og:title" content="{{ site_name }}">
+  <meta property="og:url" content="{{ request.build_absolute_uri }}">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{% static 'img/og-default.jpg' %}">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="{{ page_title }}">
-  <meta name="twitter:url" content="{{ page_url }}">
-
-  {% if request.get_host and "onrender.com" in request.get_host %}
-    <meta name="robots" content="noindex,follow">
-  {% else %}
-    <meta name="robots" content="index,follow">
-  {% endif %}
-
+  <meta name="twitter:title" content="{{ site_name }}">
+  <meta name="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}{% static 'img/og-default.jpg' %}">
+{% endif %}
 {% endwith %}
