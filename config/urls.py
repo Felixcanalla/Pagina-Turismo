@@ -1,9 +1,11 @@
 from django.contrib import admin
-from django.contrib.sitemaps.views import sitemap
+
 from django.urls import include, path
 from django.views.generic import TemplateView
 
-from pages.sitemaps import sitemaps
+
+from wagtail.contrib.sitemaps.views import sitemap
+
 
 urlpatterns = [
     path("django-admin/", admin.site.urls),
@@ -19,7 +21,7 @@ urlpatterns = [
     ),
 
     # ✅ sitemap
-    path("sitemap.xml", sitemap, {"sitemaps": sitemaps}),
+    path("sitemap.xml", sitemap),
 
     # Tus urls propias (si tenés)
    # path("", include("core.urls")),
