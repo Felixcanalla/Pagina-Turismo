@@ -1,4 +1,8 @@
-{% with canonical=page.full_url|default:request.build_absolute_uri %}
+{# templates/partials/jsonld_breadcrumbs.html #}
+{% with
+  canonical=page.full_url|default:request.build_absolute_uri
+  base=request.scheme|add:"://"|add:request.get_host
+%}
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -8,14 +12,19 @@
       "@type": "ListItem",
       "position": 1,
       "name": "Inicio",
-      "item": "{{ request.scheme }}://{{ request.get_host }}/"
-    }{% if breadcrumb_ancestors %}{% for crumb in breadcrumb_ancestors %},
-    {
-      "@type": "ListItem",
-      "position": {{ forloop.counter|add:1 }},
-      "name": "{{ crumb.title|escapejs }}",
-      "item": "{{ crumb.full_url }}"
-    }{% endfor %}{% endif %},
+      "item": "{{ base }}/"
+    }{% if breadcrumb_ancestors %}
+      {% for crumb in breadcrumb_ancestors %}
+        ,
+        {
+          "@type": "ListItem",
+          "position": {{ forloop.counter|add:1 }},
+          "name": "{{ crumb.title|escapejs }}",
+          "item": "{{ base }}{{ crumb.url }}"
+        }
+      {% endfor %}
+    {% endif %}
+    ,
     {
       "@type": "ListItem",
       "position": {% if breadcrumb_ancestors %}{{ breadcrumb_ancestors|length|add:2 }}{% else %}2{% endif %},

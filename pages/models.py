@@ -631,11 +631,7 @@ class DestinoPage(Page):
 
     def clean(self):
         super().clean()
-        if self.bulk_paste and self.bulk_paste.strip():
-            data = self._html_to_stream_data(self.bulk_paste, fill_embed_urls=True)
-            # Solo pisamos si realmente generó algo
-            if data:
-                self.body = data
+        
 
 
     def save(self, *args, **kwargs):

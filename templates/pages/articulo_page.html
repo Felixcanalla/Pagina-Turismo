@@ -16,9 +16,13 @@
       <nav class="breadcrumbs" aria-label="Breadcrumb">
         <ol>
           <li><a href="/">Inicio</a></li>
-          {% for ancestor in breadcrumb_ancestors %}
-            <li><a href="{{ ancestor.url }}">{{ ancestor.title }}</a></li>
-          {% endfor %}
+          {% if breadcrumb_ancestors %}
+            {% for ancestor in breadcrumb_ancestors %}
+              {% if ancestor.url != "/" %}
+                <li><a href="{{ ancestor.url }}">{{ ancestor.title }}</a></li>
+              {% endif %}
+            {% endfor %}
+          {% endif %}
           <li aria-current="page">{{ page.title }}</li>
         </ol>
       </nav>
@@ -38,13 +42,13 @@
   </header>
 
   <div class="post__content">
-    {% if toc|length %}
+    {% if toc %}
       <nav class="toc" aria-label="Tabla de contenidos">
         <h3 class="toc__title">Contenido</h3>
         <ul class="toc__list">
           {% for item in toc %}
             <li class="toc__item">
-              <a class="toc__link" href="#{{ item.anchor }}">{{ item.title }}</a>
+              <a class="toc__link" href="#{{ item.anchor|escape }}">{{ item.title|escape }}</a>
             </li>
           {% endfor %}
         </ul>
@@ -53,7 +57,7 @@
 
     <div class="content post__body">
       {% if body_html %}
-        {{ body_html }}
+        {{ body_html|safe }}
       {% elif page.body %}
         {% for block in page.body %}
           {% include_block block %}
@@ -66,12 +70,14 @@
 
   {# ✅ Destinos relacionados (Orderable) #}
   {% with related=page.destinos_relacionados.all %}
-    {% if related.exists %}
+    {% if related.count %}
       <section class="related">
         <h2>Destinos relacionados</h2>
         <ul>
           {% for rel in related %}
-            <li><a href="{{ rel.destino.url }}">{{ rel.destino.title }}</a></li>
+            {% if rel.destino %}
+              <li><a href="{{ rel.destino.url }}">{{ rel.destino.title }}</a></li>
+            {% endif %}
           {% endfor %}
         </ul>
       </section>

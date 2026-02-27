@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     "wagtail.contrib.forms",
     "wagtail.contrib.redirects",
     "wagtail.contrib.sitemaps",
+    "wagtail.contrib.settings",
     "wagtail.embeds",
     "wagtail.sites",
     "wagtail.locales",
@@ -69,6 +70,8 @@ INSTALLED_APPS = [
     "wagtail.search",
     "wagtail.admin",
     "wagtail",
+    
+    "core";
 
     # 3rd party
     "modelcluster",
@@ -109,6 +112,7 @@ WSGI_APPLICATION = "config.wsgi.application"
 # Templates
 # -------------------------------------------------------------------
 
+
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -119,6 +123,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "core.context_processors.site_meta",  # ✅ agregado
             ],
         },
     },

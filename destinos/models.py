@@ -3,6 +3,8 @@ from django.utils.text import slugify
 
 from django.db import models
 from django.utils.text import slugify
+from django.db import models
+from wagtail.contrib.settings.models import BaseSiteSetting, register_setting
 
 class Pais(models.Model):
     nombre = models.CharField(max_length=80, unique=True)
@@ -69,3 +71,20 @@ class SeccionDestino(models.Model):
     def __str__(self):
         return f"{self.destino} - {self.titulo}"
  
+
+
+ 
+
+@register_setting
+class SiteSettings(BaseSiteSetting):
+    brand_name = models.CharField(max_length=80, default="Destinos Posibles")
+    footer_description = models.CharField(max_length=220, blank=True)
+
+    contact_email = models.EmailField(blank=True)
+
+    instagram_url = models.URLField(blank=True)
+    facebook_url = models.URLField(blank=True)
+    youtube_url = models.URLField(blank=True)
+
+    madeby_text = models.CharField(max_length=120, blank=True)
+    madeby_url = models.URLField(blank=True)

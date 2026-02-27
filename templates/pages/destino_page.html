@@ -3,7 +3,7 @@
 
 {% block extra_head %}
   {% include "partials/jsonld_breadcrumbs.html" %}
-  {% include "partials/jsonld_article.html" %}
+  {% include "partials/jsonld_destination.html" %}
   {# {% include "partials/jsonld_faq.html" %} #}
 {% endblock %}
 
@@ -19,9 +19,13 @@
       <nav class="breadcrumbs" aria-label="Breadcrumb">
         <ol>
           <li><a href="/">Inicio</a></li>
-          {% for ancestor in breadcrumb_ancestors %}
-            <li><a href="{{ ancestor.url }}">{{ ancestor.title }}</a></li>
-          {% endfor %}
+          {% if breadcrumb_ancestors %}
+            {% for ancestor in breadcrumb_ancestors %}
+              {% if ancestor.url != "/" %}
+                <li><a href="{{ ancestor.url }}">{{ ancestor.title }}</a></li>
+              {% endif %}
+            {% endfor %}
+          {% endif %}
           <li aria-current="page">{{ page.title }}</li>
         </ol>
       </nav>
@@ -29,7 +33,7 @@
       <h1>{{ page.title }}</h1>
       {% if page.intro %}<p class="muted">{{ page.intro }}</p>{% endif %}
 
-      {% if page.tags.all %}
+      {% if page.tags.all|length %}
         <div class="tags">
           {% for t in page.tags.all %}
             <span class="tag">{{ t.name }}</span>
@@ -39,7 +43,6 @@
     </div>
   </header>
 
-  {# ✅ Igualamos estructura a ArticuloPage: post__content + toc + content post__body #}
   <div class="post__content">
 
     {% if toc %}
@@ -48,7 +51,7 @@
         <ul class="toc__list">
           {% for item in toc %}
             <li class="toc__item">
-              <a class="toc__link" href="#{{ item.anchor }}">{{ item.title }}</a>
+              <a class="toc__link" href="#{{ item.anchor|escape }}">{{ item.title|escape }}</a>
             </li>
           {% endfor %}
         </ul>
@@ -57,7 +60,7 @@
 
     <div class="content post__body">
       {% if body_html %}
-        {{ body_html }}
+        {{ body_html|safe }}
       {% elif page.body %}
         {# Fallback: render tradicional de bloques #}
         {% for block in page.body %}
@@ -107,16 +110,20 @@
   {% endif %}
 
   {# ✅ Guías relacionadas a este destino (reverse del Orderable) #}
-  {% if page.articulos_relacionados.all %}
-    <section class="related">
-      <h2>Guías para este destino</h2>
-      <ul>
-        {% for rel in page.articulos_relacionados.all %}
-          <li><a href="{{ rel.articulo.url }}">{{ rel.articulo.title }}</a></li>
-        {% endfor %}
-      </ul>
-    </section>
-  {% endif %}
+  {% with rels=page.articulos_relacionados.all %}
+    {% if rels.count %}
+      <section class="related">
+        <h2>Guías para este destino</h2>
+        <ul>
+          {% for rel in rels %}
+            {% if rel.articulo %}
+              <li><a href="{{ rel.articulo.url }}">{{ rel.articulo.title }}</a></li>
+            {% endif %}
+          {% endfor %}
+        </ul>
+      </section>
+    {% endif %}
+  {% endwith %}
 
   {# ✅ Destinos relacionados (por tags/hermanos) #}
   {% if related_destinos %}

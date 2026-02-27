@@ -1,28 +1,35 @@
 # pages/utils.py
-from django.utils.text import slugify
-from wagtail.rich_text import RichText
+import re
+import unicodedata
+from typing import Dict, List, Tuple
 
-def get_filtered_breadcrumb_ancestors(page):
-    """
-    Devuelve ancestors para breadcrumbs filtrando páginas no deseadas.
-    Ajustá filtros según tu sitio.
-    """
-    # incluye root/home si querés; acá filtramos por títulos típicos
-    excluded_titles = {"welcome", "home"}
-    ancestors = page.get_ancestors().live().public()
-    return [p for p in ancestors if (p.title or "").strip().lower() not in excluded_titles]
+from django.utils.html import strip_tags
+from django.utils.text import slugify
+from wagtail.models import Page
+
+
+def _unique_anchor(title: str, used: dict) -> str:
+    title = (title or "").strip()
+    norm = unicodedata.normalize("NFKD", title).encode("ascii", "ignore").decode("ascii")
+    base = slugify(norm) or "seccion"
+    used[base] = used.get(base, 0) + 1
+    return base if used[base] == 1 else f"{base}-{used[base]}"
+
+
+def get_filtered_breadcrumb_ancestors(page: Page):
+    ancestors = []
+    for p in page.get_ancestors().live().public():
+        p = p.specific
+        if getattr(p, "url", None) == "/":
+            continue  # evita duplicar "Inicio"
+        ancestors.append(p)
+    return ancestors
+
 
 def build_toc_and_body_html(stream_value):
-    """
-    Construye:
-    - toc: lista de items para menú/tabla de contenido
-    - body_html: string HTML renderizado desde StreamField
-
-    Nota: tu proyecto ya renderiza bloques con templates; esto es un fallback sencillo.
-    Si ya tenías una versión más avanzada, reemplazala acá.
-    """
     toc = []
     parts = []
+    used = {}
 
     if not stream_value:
         return toc, ""
@@ -35,33 +42,42 @@ def build_toc_and_body_html(stream_value):
             title = (val.get("title") if isinstance(val, dict) else "") or ""
             title = title.strip()
             if title:
-                anchor = slugify(title)
+                anchor = _unique_anchor(title, used)
                 toc.append({"title": title, "anchor": anchor})
                 parts.append(f'<h2 id="{anchor}">{title}</h2>')
 
         elif btype == "rich_text":
-            # RichTextBlock ya viene como HTML (string)
             html = str(val) if val else ""
-            parts.append(html)
+
+            # Si hay <h2> dentro del rich_text, les inyecta id y los suma al TOC
+            if html:
+                def repl(match):
+                    inner = match.group(1)
+                    title = strip_tags(inner).strip()
+                    if not title:
+                        return match.group(0)
+                    anchor = _unique_anchor(title, used)
+                    toc.append({"title": title, "anchor": anchor})
+                    return f'<h2 id="{anchor}">{inner}</h2>'
+
+                html = re.sub(r"<h2[^>]*>(.*?)</h2>", repl, html, flags=re.IGNORECASE | re.DOTALL)
+                parts.append(html)
 
         elif btype == "quick_section":
-            # Render mínimo: H2 + body (el template real lo renderiza mejor)
             title = (val.get("title") or "").strip()
             subtitle = (val.get("subtitle") or "").strip()
             body = val.get("body") or ""
+
             if title:
-                anchor = slugify(title)
+                anchor = _unique_anchor(title, used)
                 toc.append({"title": title, "anchor": anchor})
                 parts.append(f'<h2 id="{anchor}">{title}</h2>')
             if subtitle:
                 parts.append(f"<p><em>{subtitle}</em></p>")
             if body:
-                parts.append(str(RichText(body)))
+                # body YA es HTML que vos armaste en la conversión
+                parts.append(str(body))
 
-        else:
-            # Para otros bloques (image, map, youtube, etc.) no inventamos HTML acá,
-            # porque normalmente se renderizan por template en el page template.
-            # Los dejamos fuera de este fallback.
-            pass
+        # otros bloques: se renderizan por template si no usás body_html
 
     return toc, "".join(parts)

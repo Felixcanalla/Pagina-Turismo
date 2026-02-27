@@ -1,22 +1,38 @@
-{# partials/jsonld_article.html #}
+{# templates/partials/jsonld_article.html #}
+{% load wagtailimages_tags static %}
+
 {% if page %}
+  {% with
+    page_url=page.full_url|default:request.build_absolute_uri
+  %}
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "Article",
+    "@type": "BlogPosting",
     "mainEntityOfPage": {
       "@type": "WebPage",
-      "@id": "{{ request.build_absolute_uri }}"
+      "@id": "{{ page_url }}"
     },
-    "headline": "{{ page.title|escapejs }}",
-    {% if page.seo_description %}
-    "description": "{{ page.seo_description|striptags|escapejs }}",
-    {% endif %}
+    "headline": "{{ page.title|escapejs }}"{% if page.search_description or page.intro %},{% endif %}
+    {% if page.search_description %}
+    "description": "{{ page.search_description|striptags|truncatechars:200|escapejs }}"{% elif page.intro %}
+    "description": "{{ page.intro|striptags|truncatechars:200|escapejs }}"{% endif %}
     {% if page.cover_image %}
-    "image": ["{{ page.cover_image.file.url }}"],
+      , "image": [
+        "{% image page.cover_image fill-1200x630 as shareimg %}{{ request.scheme }}://{{ request.get_host }}{{ shareimg.url }}"
+      ]
+    {% elif page.hero_image %}
+      , "image": [
+        "{% image page.hero_image fill-1200x630 as shareimg %}{{ request.scheme }}://{{ request.get_host }}{{ shareimg.url }}"
+      ]
+    {% else %}
+      , "image": [
+        "{{ request.scheme }}://{{ request.get_host }}{% static 'img/og-default.jpg' %}"
+      ]
     {% endif %}
-    "datePublished": "{{ page.first_published_at|date:'c' }}",
-    "dateModified": "{{ page.last_published_at|date:'c' }}"
+    , "datePublished": "{{ page.first_published_at|date:'c' }}"
+    , "dateModified": "{{ page.last_published_at|date:'c' }}"
   }
   </script>
+  {% endwith %}
 {% endif %}

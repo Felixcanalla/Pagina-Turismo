@@ -1,20 +1,35 @@
-{# partials/jsonld_destination.html #}
+{# templates/partials/jsonld_destination.html #}
+{% load wagtailimages_tags static %}
+
 {% if page %}
+  {% with
+    page_url=page.full_url|default:request.build_absolute_uri
+    base=request.scheme|add:"://"|add:request.get_host
+  %}
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "WebPage",
-    "@id": "{{ request.build_absolute_uri }}",
+    "@type": "TouristDestination",
     "name": "{{ page.title|escapejs }}",
+    "url": "{{ page_url }}"{% if page.seo_description or page.search_description or page.intro %},{% endif %}
     {% if page.seo_description %}
-    "description": "{{ page.seo_description|striptags|escapejs }}",
-    {% endif %}
+    "description": "{{ page.seo_description|striptags|truncatechars:220|escapejs }}"{% elif page.search_description %}
+    "description": "{{ page.search_description|striptags|truncatechars:220|escapejs }}"{% elif page.intro %}
+    "description": "{{ page.intro|striptags|truncatechars:220|escapejs }}"{% endif %}
     {% if page.hero_image %}
-    "primaryImageOfPage": {
-      "@type": "ImageObject",
-      "url": "{{ page.hero_image.file.url }}"
-    }
+      , "image": [
+        "{% image page.hero_image fill-1200x630 as shareimg %}{{ base }}{{ shareimg.url }}"
+      ]
+    {% else %}
+      , "image": [
+        "{{ base }}{% static 'img/og-default.jpg' %}"
+      ]
     {% endif %}
+    , "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "{{ page_url }}"
+    }
   }
   </script>
+  {% endwith %}
 {% endif %}
