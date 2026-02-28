@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags %}
+
+{% block content %}
+  <section class="search-results">
+    <h1>Buscar</h1>
+
+    <form action="/buscar/" method="get" role="search" class="search-form-inline">
+      <input type="search" name="q" value="{{ query }}" placeholder="Buscar..." />
+      <button type="submit">Buscar</button>
+    </form>
+
+    {% if query %}
+      <p class="muted">Resultados para: <strong>{{ query }}</strong> ({{ results|length }})</p>
+
+      {% if results %}
+        <ul class="results-list">
+          {% for p in results %}
+            <li class="result">
+              <a href="{{ p.url }}"><strong>{{ p.title }}</strong></a>
+
+              {# extracto: preferimos intro / seo_description / search_description #}
+              {% if p.intro %}
+                <p class="muted">{{ p.intro|striptags|truncatechars:180 }}</p>
+              {% elif p.seo_description %}
+                <p class="muted">{{ p.seo_description|striptags|truncatechars:180 }}</p>
+              {% elif p.search_description %}
+                <p class="muted">{{ p.search_description|striptags|truncatechars:180 }}</p>
+              {% endif %}
+
+              <small class="muted">
+                {% if p.content_type.model == "destinopage" %}Destino{% else %}Guía{% endif %}
+              </small>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p>No se encontraron resultados.</p>
+      {% endif %}
+    {% else %}
+      <p class="muted">Escribí un término y presioná buscar.</p>
+    {% endif %}
+  </section>
+{% endblock %}
