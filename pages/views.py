@@ -10,10 +10,10 @@ def search(request):
     if q:
         articulos = ArticuloPage.objects.live().public().search(q)
         destinos = DestinoPage.objects.live().public().search(q)
+        
 
         # Convertimos a específicos (ya lo son, pero mantiene consistencia)
-        results = [p.specific for p in articulos] + [p.specific for p in destinos]
-
+        results = list(articulos) + list(destinos)
     return render(request, "pages/search_results.html", {
         "query": q,
         "results": results,
