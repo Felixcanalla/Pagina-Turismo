@@ -1,17 +1,14 @@
 from django.shortcuts import render
-from django.shortcuts import render
 from wagtail.models import Page
 
 def search(request):
     q = (request.GET.get("q") or "").strip()
-    results = Page.objects.none()
+    results = []
 
     if q:
-        results = (
-            Page.objects.live().public()
-            .search(q)  # usa Wagtail Search
-            .specific()
-        )
+        results = Page.objects.live().public().search(q)
+        # Convertimos a páginas específicas (ArticuloPage, DestinoPage, etc.)
+        results = [p.specific for p in results]
 
     return render(request, "pages/search.html", {
         "query": q,
