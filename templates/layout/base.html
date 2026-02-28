@@ -22,17 +22,50 @@
   {# ✅ Para JSON-LD de artículos, breadcrumbs, etc. #}
   {% block extra_head %}{% endblock %}
 </head>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const toggle = document.getElementById("search-toggle");
+  const form = document.getElementById("search-form");
+  const input = document.getElementById("search-input");
+
+  toggle.addEventListener("click", function () {
+    form.classList.toggle("active");
+
+    if (form.classList.contains("active")) {
+      setTimeout(() => input.focus(), 200);
+    }
+  });
+});
+</script>
 
 <body id="top">
 
  
-  {# Navbar #}
-  <header class="site-header dp-navbar dp-navbar--top">
-    <div class="container">
-      <div class="nav">
-        <a class="brand" href="/">Destinos Posibles {{ SITE_NAME }}</a>
+                  {# Navbar #}
 
-        <nav class="nav-links" aria-label="Navegación principal">
+
+            <header class="site-header dp-navbar dp-navbar--top">
+              <div class="container">
+                <div class="nav">
+                  <a class="brand" href="/">Destinos Posibles {{ SITE_NAME }}</a>
+
+                  <nav class="nav-links" aria-label="Navegación principal">
+                    <div class="nav-search-wrapper">
+            <button id="search-toggle" aria-label="Buscar" type="button">
+              🔍
+            </button>
+
+            <form id="search-form" action="{% url 'search' %}" method="get">
+              <input
+                type="search"
+                name="q"
+                id="search-input"
+                placeholder="Buscar destinos, guías..."
+                autocomplete="off"
+              >
+            </form>
+          </div>
+          
           <a href="/" {% if request.path == "/" %}aria-current="page"{% endif %}>Inicio</a>
           <a href="/destinos/" {% if request.path|slice:":10" == "/destinos/" %}aria-current="page"{% endif %}>Destinos</a>
           <a href="/guias/" {% if request.path|slice:":7" == "/guias/" %}aria-current="page"{% endif %}>Guías</a>

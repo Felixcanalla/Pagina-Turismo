@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtailimages_tags %}
+
+{% block content %}
+<section class="search">
+  <h1>Buscar</h1>
+
+  <form method="get" action="{% url 'search' %}" class="search-form">
+    <input
+      type="search"
+      name="q"
+      value="{{ query|default:'' }}"
+      placeholder="Buscar destinos, guías, itinerarios..."
+      aria-label="Buscar"
+      required
+    >
+    <button type="submit">Buscar</button>
+  </form>
+
+  {% if query %}
+    <p class="muted">
+      Resultados para <strong>{{ query }}</strong>:
+      <strong>{{ results|length }}</strong>
+    </p>
+
+    {% if results %}
+      <div class="grid">
+        {% for p in results %}
+          <a class="card" href="{{ p.url }}">
+            <div class="card-body">
+              <h3>{{ p.title }}</h3>
+              {% if p.search_description %}
+                <p class="muted">{{ p.search_description }}</p>
+              {% elif p.intro %}
+                <p class="muted">{{ p.intro }}</p>
+              {% endif %}
+
+              <small class="muted">
+                {% if p.content_type.model == "destinopage" %}Destino{% elif p.content_type.model == "articulopage" %}Guía{% else %}Página{% endif %}
+              </small>
+            </div>
+          </a>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p>No encontramos resultados. Probá con otras palabras.</p>
+    {% endif %}
+  {% endif %}
+</section>
+{% endblock %}

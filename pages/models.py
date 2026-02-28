@@ -382,6 +382,15 @@ class DestinoPage(Page):
         help_text="Pegá HTML (Docs/Word). Al guardar, se convierte a bloques automáticamente.",
     )
 
+
+    search_fields = Page.search_fields + [
+        index.SearchField("title", partial_match=True),
+        index.SearchField("search_description", partial_match=True),
+        index.SearchField("seo_description", partial_match=True),
+        index.SearchField("intro", partial_match=True),
+        index.SearchField("body", partial_match=True),
+    ]
+
     body = StreamField(
         [
             ("quick_sections", QuickSectionsBlock()),
@@ -762,6 +771,15 @@ class ArticuloPage(Page):
         default="",
         help_text="Pegá HTML (Docs/Word). Al guardar, se convierte a bloques automáticamente.",
     )
+
+
+    search_fields = Page.search_fields + [
+        index.SearchField("title", partial_match=True),
+        index.SearchField("search_description", partial_match=True),
+        index.SearchField("seo_description", partial_match=True),
+        index.SearchField("intro", partial_match=True),
+        index.SearchField("body", partial_match=True),
+    ]
 
     body = StreamField(
         [

@@ -2,6 +2,7 @@ from django.contrib import admin
 
 from django.urls import include, path
 from django.views.generic import TemplateView
+from pages.views import search
 
 
 from wagtail.contrib.sitemaps.views import sitemap
@@ -25,6 +26,7 @@ urlpatterns = [
 
     # Tus urls propias (si tenés)
    # path("", include("core.urls")),
+    path("buscar/", search, name="search"),
 
     # Wagtail pages (SIEMPRE al final)
     path("", include("wagtail.urls")),

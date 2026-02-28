@@ -658,3 +658,39 @@ a:hover{ filter: brightness(.95); }
   color: #fff;
   font-weight: 800;
 }
+
+
+
+.nav-search-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+#search-toggle {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+#search-form {
+  position: absolute;
+  right: 0;
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+#search-form.active {
+  opacity: 1;
+  width: 220px;
+}
+
+#search-form input {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
