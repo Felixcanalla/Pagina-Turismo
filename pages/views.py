@@ -1,16 +1,20 @@
 from django.shortcuts import render
 from wagtail.models import Page
+from pages.models import ArticuloPage, DestinoPage  # ajustá si tus imports difieren
+
 
 def search(request):
     q = (request.GET.get("q") or "").strip()
     results = []
 
     if q:
-        results = Page.objects.live().public().search(q)
-        # Convertimos a páginas específicas (ArticuloPage, DestinoPage, etc.)
-        results = [p.specific for p in results]
+        articulos = ArticuloPage.objects.live().public().search(q)
+        destinos = DestinoPage.objects.live().public().search(q)
 
-    return render(request, "pages/search.html", {
+        # Convertimos a específicos (ya lo son, pero mantiene consistencia)
+        results = [p.specific for p in articulos] + [p.specific for p in destinos]
+
+    return render(request, "pages/search_results.html", {
         "query": q,
         "results": results,
     })

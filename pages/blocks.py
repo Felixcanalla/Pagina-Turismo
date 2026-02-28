@@ -1,6 +1,8 @@
 from wagtail import blocks
 from wagtail.embeds.blocks import EmbedBlock
 from wagtail.images.blocks import ImageChooserBlock
+from wagtail.search import index
+
 
 
 
@@ -141,6 +143,12 @@ class QuickSectionBlock(blocks.StructBlock):
         icon = "form"
         label = "Sección (rápida)"
         template = "blocks/quick_section.html"
+
+        search_fields = [
+            index.SearchField("title"),
+            index.SearchField("subtitle"),
+            index.SearchField("body"),
+        ]
 
 
 

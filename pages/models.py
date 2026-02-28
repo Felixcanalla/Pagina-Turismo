@@ -384,11 +384,11 @@ class DestinoPage(Page):
 
 
     search_fields = Page.search_fields + [
-        index.SearchField("title", partial_match=True),
-        index.SearchField("search_description", partial_match=True),
-        index.SearchField("seo_description", partial_match=True),
-        index.SearchField("intro", partial_match=True),
-        index.SearchField("body", partial_match=True),
+        index.SearchField("title"),
+        index.SearchField("search_description"),
+        index.SearchField("seo_description"),
+        index.SearchField("intro"),
+        index.SearchField("body"),
     ]
 
     body = StreamField(
@@ -774,11 +774,11 @@ class ArticuloPage(Page):
 
 
     search_fields = Page.search_fields + [
-        index.SearchField("title", partial_match=True),
-        index.SearchField("search_description", partial_match=True),
-        index.SearchField("seo_description", partial_match=True),
-        index.SearchField("intro", partial_match=True),
-        index.SearchField("body", partial_match=True),
+        index.SearchField("title"),
+        index.SearchField("search_description"),
+        index.SearchField("seo_description"),
+        index.SearchField("intro"),
+        index.SearchField("body"),
     ]
 
     body = StreamField(

@@ -143,7 +143,17 @@ if DATABASE_URL:
         DATABASE_URL,
         conn_max_age=600,
         ssl_require=True,
+
+
     )
+
+
+WAGTAILSEARCH_BACKENDS = {
+    "default": {
+        "BACKEND": "wagtail.search.backends.database",
+        "SEARCH_CONFIG": "spanish_unaccent",
+    }
+}   
 
 # -------------------------------------------------------------------
 # Password validation
